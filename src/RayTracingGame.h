@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Guillem Serra. All Rights Reserved.
 
 #pragma once
+#include <memory>
+
 #include "core/GameBase.h"
 
 #include "graphics/Renderer.h"
@@ -18,5 +20,5 @@ public:
 private:
     void RenderUI() override;
 
-    Renderer _renderer;
+    std::unique_ptr<Renderer> _renderer;
 };

@@ -1,4 +1,6 @@
 ﻿#include "RayTracingGame.h"
+#include <fstream>
+#include <iostream>
 
 #include "input/OrbitalCameraInput.h"
 
@@ -13,8 +15,8 @@ void RayTracingGame::Init(SDL_Window* window)
     glm::vec3 cameraPosition = glm::vec3(0, 5, 5);
     _camera->SetPosition(cameraPosition);
 
-    _renderer = Renderer(_camera);
-    _rendererBase = _renderer;
+    _renderer = std::make_unique<Renderer>(_window, _camera);
+    SetRenderer(_renderer.get());
 
     OrbitalCameraInput* orbitalCameraInput = new OrbitalCameraInput(_camera);
     AddInputHandler(orbitalCameraInput);
@@ -35,8 +37,14 @@ void RayTracingGame::Render()
     _camera->SetTarget(center);
     _camera->UpdatePosition();
 
-    _renderer.RenderBackground();
-    _renderer.RenderPlane();
+    _renderer->RenderBackground();
+
+    glm::vec3 planePosition = glm::vec3(0.f, -0.1f, 0.f);
+    float scalevalue = 50.f;
+    glm::vec2 scale = glm::vec2(scalevalue, scalevalue);
+    //_renderer->RenderPlane(planePosition, scale);
+
+    _renderer->RenderRaytracing();
 }
 
 void RayTracingGame::Quit()

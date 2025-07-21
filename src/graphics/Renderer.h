@@ -1,17 +1,35 @@
 ﻿// Copyright (c) Guillem Serra. All Rights Reserved.
 
 #pragma once
-#include "graphics/CubeRenderer.h"
+#include <vector>
+
+#include "graphics/Camera.h"
 #include "graphics/RendererBase.h"
+#include "graphics/Shader.h"
+
+#include "raytracing/ScreenQuadShape.h"
+
+#include <SDL3/SDL_video.h>
 
 class Renderer : public RendererBase
 {
 public:
-    Renderer(Camera* const camera);
+    Renderer(SDL_Window* window, Camera* const camera);
 
-    void RenderPlane();
+    void RenderRaytracing();
 
 private:
-    CubeRenderer _cubeRenderer;
-    unsigned int _generalShader = 0;
+    ScreenQuadShape _screenQuadRenderer;
+
+    GLuint _raytracedTexture = 0;
+
+    SDL_Window* _window;
+
+    int _lastScreenWidth = 0;
+    int _lastScreenHeight = 0;
+
+    Shader _generalShader;
+    Shader _raytracingShader;
+
+    void GenerateRGBImage(int screenWidth, int screenHeight, std::vector<unsigned char>& image);
 };
