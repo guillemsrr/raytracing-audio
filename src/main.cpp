@@ -9,7 +9,7 @@ using namespace SerraEngine;
 int main(int argc, char* argv[])
 {
     App EngineApp = App(argc, argv);
-    if (!EngineApp.Init("Raytracing + audio", 800, 800))
+    if (!EngineApp.Init("Raytracing + audio", 960, 600))
     {
         return 0;
     }

@@ -24,6 +24,9 @@ void RayTracingGame::Init(SDL_Window* window)
 
 void RayTracingGame::Update(float deltaTime)
 {
+    glm::vec3 center = glm::vec3();
+    _camera->SetTarget(center);
+    _camera->UpdatePosition();
 }
 
 void RayTracingGame::HandleEvent(const SDL_Event& e)
@@ -33,18 +36,9 @@ void RayTracingGame::HandleEvent(const SDL_Event& e)
 
 void RayTracingGame::Render()
 {
-    glm::vec3 center = glm::vec3();
-    _camera->SetTarget(center);
-    _camera->UpdatePosition();
-
     _renderer->RenderBackground();
-
-    glm::vec3 planePosition = glm::vec3(0.f, -0.1f, 0.f);
-    float scalevalue = 50.f;
-    glm::vec2 scale = glm::vec2(scalevalue, scalevalue);
-    //_renderer->RenderPlane(planePosition, scale);
-
     _renderer->RenderRaytracing();
+    _renderer->RenderDebug();
 }
 
 void RayTracingGame::Quit()
