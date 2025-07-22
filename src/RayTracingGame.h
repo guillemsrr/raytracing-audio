@@ -18,6 +18,8 @@ public:
     void Quit() override;
 
 private:
+    Scene _scene;
+
     void RenderUI() override;
 
     std::unique_ptr<Renderer> _renderer;

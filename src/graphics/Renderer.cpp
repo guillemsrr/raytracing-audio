@@ -1,14 +1,22 @@
 ﻿#include "Renderer.h"
 #include <algorithm>
+#include <memory>
 #include <vector>
 
 #include "graphics/Camera.h"
 #include "Graphics/GraphicsUtils.h"
 #include "graphics/Shader.h"
 
-#include "raytracing/Ray.h"
+#include "../raytracing/Interval.h"
+#include "../objects/SphereObject.h"
+
+#include "../raytracing/Ray.h"
+#include "../raytracing/HitResult.h"
+#include "../scene/Scene.h"
 
 #include <SDL3/SDL_log.h>
+
+#include "utils/Utils.h"
 
 Renderer::Renderer(SDL_Window* window, Camera* const camera)
     : RendererBase(camera), _window(window)
@@ -37,6 +45,11 @@ Renderer::Renderer(SDL_Window* window, Camera* const camera)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 }
 
+void Renderer::SetScene(Scene& scene)
+{
+    _scene = &scene;
+}
+
 void Renderer::RenderRaytracing()
 {
     int screenWidth, screenHeight;
@@ -56,12 +69,10 @@ void Renderer::RenderRaytracing()
         glBindTexture(GL_TEXTURE_2D, _raytracedTexture);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, screenWidth, screenHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
 
-        _raytracingTextureVector = std::vector<unsigned char>(screenWidth * screenHeight * bytes_per_pixel);
+        _raytracingTextureVector = std::vector<uint8_t>(screenWidth * screenHeight * bytes_per_pixel);
     }
 
-    //GenerateRGBImage();
-    //GenerateBackground();
-    ShootRays();
+    RayTraceScreen();
 
     _raytracingShader.Use();
 
@@ -120,71 +131,89 @@ void Renderer::GenerateRGBImage()
             float g = float(blockY) / (colorGradientSize - 1);
             float b = 0.0f;
 
-            int index = (y * _screenWidth + x);
+            int index = y * _screenWidth + x;
             color color(r, g, b);
             write_color(color, index);
         }
     }
 }
 
-void Renderer::GenerateBackground()
+color Renderer::RayTracePixelColor(glm::vec3 pixel_pos)
 {
-    auto aspect_ratio = static_cast<float>(_screenWidth) / static_cast<float>(_screenHeight);
-    auto focal_length = 1.0;
-    auto viewport_height = 2.0;
-    auto viewport_width = viewport_height * aspect_ratio;
-    auto camera_center = _camera->GetPosition();
+    glm::vec3 rayPosition = _camera->GetPosition();
+    glm::vec3 ray_dir = glm::normalize(pixel_pos - rayPosition);
 
-    auto viewport_u = vec3(viewport_width, 0, 0);
-    auto viewport_v = vec3(0, -viewport_height, 0);
-    auto pixel_delta_u = viewport_u / static_cast<float>(_screenWidth);
-    auto pixel_delta_v = viewport_v / static_cast<float>(_screenHeight);
-
-    auto viewport_upper_left = camera_center - vec3(0, 0, focal_length) - viewport_u / 2.f - viewport_v / 2.f;
-    auto pixel00_loc = viewport_upper_left + 0.5f * (pixel_delta_u + pixel_delta_v);
-
-    for (int j = 0; j < _screenHeight; j++)
+    color pixel_color = color(0.0f);
+    int bounces = 2;
+    float multiplier = 1.0f;
+    for (int b = 0; b < bounces; ++b)
     {
-        for (int i = 0; i < _screenWidth; i++)
+        Ray ray(rayPosition, ray_dir);
+        HitResult hit = _scene->HitAny(ray, Interval(0, FLT_MAX));
+        //TODO: cache hit?
+        if (hit.HasHit())
         {
-            auto pixel_center = pixel00_loc + (static_cast<float>(i) * pixel_delta_u) + (static_cast<float>(j) *
-                pixel_delta_v);
-            auto ray_direction = pixel_center - camera_center;
-            Ray ray(camera_center, ray_direction);
+            float dot = glm::dot(hit.normal, -lightDir);
+            dot = std::max(dot, 0.0f);
+            pixel_color += glm::vec3(hit.ObjectHit->Albedo) * dot * multiplier;
 
-            color pixel_color = ray_color(ray);
-            int index = (j * _screenWidth + i);
-            write_color(pixel_color, index);
+            multiplier *= 0.75f;
+            rayPosition = hit.p + hit.normal * 0.001f;
+            ray_dir = glm::reflect(hit.direction, hit.normal);
+            continue;
         }
+
+        vec3 unit_direction = glm::normalize(ray.direction());
+        float a = 0.5f * (unit_direction.y + 1.f);
+        color backgroundColor(0.1f, 0.2f, 0.3f);
+        color white(1.0, 1.0, 1.0);
+
+        pixel_color = glm::mix(white, backgroundColor, a);
+        break;
     }
+
+    return pixel_color;
 }
 
-void Renderer::ShootRays()
+void Renderer::RayTraceScreen()
 {
     float aspect = _camera->GetAspectRatio();
     float fov_rad = _camera->GetFOVRad();
     float viewport_height = 2.0f * tan(fov_rad / 2.0f);
     float viewport_width = viewport_height * aspect;
 
-    glm::vec3 cam_pos = _camera->GetPosition();
     glm::vec3 horizontal = viewport_width * _camera->GetRight();
     glm::vec3 vertical = viewport_height * _camera->GetUp();
-    glm::vec3 lower_left_corner = cam_pos + _camera->GetForward() - horizontal * 0.5f - vertical * 0.5f;
+    glm::vec3 lower_left_corner = _camera->GetPosition() + _camera->GetForward() - horizontal * 0.5f - vertical * 0.5f;
 
-    for (int j = 0; j < _screenHeight; ++j)
+    for (int j = 0; j < _screenHeight; j += pixelSize)
     {
-        for (int i = 0; i < _screenWidth; ++i)
+        for (int i = 0; i < _screenWidth; i += pixelSize)
         {
             float u = static_cast<float>(i) / (_screenWidth - 1);
             float v = static_cast<float>(j) / (_screenHeight - 1);
 
             glm::vec3 pixel_pos = lower_left_corner + u * horizontal + v * vertical;
-            glm::vec3 ray_dir = glm::normalize(pixel_pos - cam_pos);
+            color pixel_color = RayTracePixelColor(pixel_pos);
+            write_color(pixel_color, i, j, pixelSize);
+        }
+    }
+}
 
-            Ray ray(cam_pos, ray_dir);
-            color pixel_color = ray_color(ray);
+void Renderer::write_color(const color& pixel_color, int i, int j, int pixelSize)
+{
+    for (int dy = 0; dy < pixelSize; ++dy)
+    {
+        for (int dx = 0; dx < pixelSize; ++dx)
+        {
+            int x = i + dx;
+            int y = j + dy;
 
-            int index = j * _screenWidth + i;
+            // Safety check in case block goes beyond screen bounds
+            if (x >= _screenWidth || y >= _screenHeight)
+                continue;
+
+            int index = y * _screenWidth + x;
             write_color(pixel_color, index);
         }
     }
@@ -192,27 +221,22 @@ void Renderer::ShootRays()
 
 void Renderer::write_color(const color& pixel_color, int index)
 {
-    float r = std::clamp(pixel_color.x, 0.0f, 1.0f);
-    float g = std::clamp(pixel_color.y, 0.0f, 1.0f);
-    float b = std::clamp(pixel_color.z, 0.0f, 1.0f);
-
     index *= bytes_per_pixel;
-    _raytracingTextureVector[index + 0] = static_cast<unsigned char>(255.999f * r);
-    _raytracingTextureVector[index + 1] = static_cast<unsigned char>(255.999f * g);
-    _raytracingTextureVector[index + 2] = static_cast<unsigned char>(255.999f * b);
+    _raytracingTextureVector[index + 0] = Utils::FloatToByte255(pixel_color.r);
+    _raytracingTextureVector[index + 1] = Utils::FloatToByte255(pixel_color.g);
+    _raytracingTextureVector[index + 2] = Utils::FloatToByte255(pixel_color.b);
 }
 
-color Renderer::ray_color(const Ray& r)
+color Renderer::hit_to_color(const Ray& ray, const HitResult& hit)
 {
-    point3 sphereCenter(0, 0, 0);
-    auto t = hit_sphere(sphereCenter, 0.1, r);
-    if (t > 0.f)
+    if (hit.HasHit())
     {
-        vec3 N = glm::normalize(r.at(t) - sphereCenter);
-        return 0.5f * color(N.x + 1, N.y + 1, N.z + 1);
+        float dot = glm::dot(hit.normal, -lightDir);
+        dot = std::max(dot, 0.0f);
+        return hit.ObjectHit->Albedo * dot;
     }
 
-    vec3 unit_direction = glm::normalize(r.direction());
+    vec3 unit_direction = glm::normalize(ray.direction());
     float a = 0.5f * (unit_direction.y + 1.f);
     color backgroundColor(0.1f, 0.2f, 0.3f);
     color white(1.0, 1.0, 1.0);
@@ -223,14 +247,14 @@ color Renderer::ray_color(const Ray& r)
 double Renderer::hit_sphere(const point3& center, double radius, const Ray& r)
 {
     vec3 oc = center - r.origin();
-    auto a = dot(r.direction(), r.direction());
-    auto b = -2.0 * dot(r.direction(), oc);
-    auto c = dot(oc, oc) - radius * radius;
-    auto discriminant = b * b - 4 * a * c;
+    auto a = Utils::LengthSquared(r.direction());
+    auto h = dot(r.direction(), oc);
+    auto c = Utils::LengthSquared(oc) - radius * radius;
+    auto discriminant = h * h - a * c;
+
     if (discriminant < 0)
     {
-        return -1.f;
+        return -1.0;
     }
-
-    return (-b - std::sqrt(discriminant)) / (2.0 * a);
+    return (h - std::sqrt(discriminant)) / a;
 }

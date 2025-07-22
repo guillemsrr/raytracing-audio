@@ -4,18 +4,17 @@
 #include <vector>
 
 #include "graphics/Camera.h"
-#include "graphics/Camera.h"
-#include "graphics/Camera.h"
-#include "graphics/Camera.h"
-#include "graphics/Camera.h"
-#include "graphics/Camera.h"
-#include "graphics/Camera.h"
 #include "graphics/RendererBase.h"
 #include "graphics/Shader.h"
 #include "graphics/shapes/CubeRenderer.h"
 
-#include "raytracing/Ray.h"
-#include "raytracing/ScreenQuadShape.h"
+#include "../raytracing/Ray.h"
+#include "renderShapes/ScreenQuadShape.h"
+
+#include "../scene/Scene.h"
+
+#include "graphics/Camera.h"
+#include "graphics/Camera.h"
 
 #include <SDL3/SDL_video.h>
 
@@ -25,6 +24,7 @@ class Renderer : public RendererBase
 {
 public:
     Renderer(SDL_Window* window, Camera* const camera);
+    void SetScene(Scene& scene);
 
     void RenderRaytracing();
     void RenderDebug();
@@ -43,16 +43,22 @@ private:
     Shader _raytracingShader;
     Shader _debugShader;
 
-    std::vector<unsigned char> _raytracingTextureVector;
+    const Scene* _scene = nullptr;
+    int pixelSize = 5;
+
+    std::vector<uint8_t> _raytracingTextureVector;
+
+    vec3 lightDir = glm::normalize(glm::vec3(-1.f, -1.f, -1.f));
 
     void GenerateRGBImage();
-    void GenerateBackground();
-    void ShootRays();
+    void RayTraceScreen();
+    color RayTracePixelColor(glm::vec3 pixel_pos);
 
+    void write_color(const color& pixel_color, int i, int j, int pixelSize);
     void write_color(const color& pixel_color, int index);
     double hit_sphere(const point3& center, double radius, const Ray& r);
 
-    const uint8_t bytes_per_pixel = 3; 
+    const uint8_t bytes_per_pixel = 3;
 
-    color ray_color(const Ray& r);
+    color hit_to_color(const Ray& ray, const HitResult& hit);
 };
