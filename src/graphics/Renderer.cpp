@@ -204,9 +204,12 @@ void Renderer::write_color(const color& pixel_color, int index)
 
 color Renderer::ray_color(const Ray& r)
 {
-    if (hit_sphere(point3(0, 0, 0), 0.1, r))
+    point3 sphereCenter(0, 0, 0);
+    auto t = hit_sphere(sphereCenter, 0.1, r);
+    if (t > 0.f)
     {
-        return color(1, 0, 0);
+        vec3 N = glm::normalize(r.at(t) - sphereCenter);
+        return 0.5f * color(N.x + 1, N.y + 1, N.z + 1);
     }
 
     vec3 unit_direction = glm::normalize(r.direction());
@@ -217,12 +220,17 @@ color Renderer::ray_color(const Ray& r)
     return glm::mix(white, backgroundColor, a);
 }
 
-bool Renderer::hit_sphere(const point3& center, double radius, const Ray& r)
+double Renderer::hit_sphere(const point3& center, double radius, const Ray& r)
 {
     vec3 oc = center - r.origin();
     auto a = dot(r.direction(), r.direction());
     auto b = -2.0 * dot(r.direction(), oc);
     auto c = dot(oc, oc) - radius * radius;
     auto discriminant = b * b - 4 * a * c;
-    return (discriminant >= 0);
+    if (discriminant < 0)
+    {
+        return -1.f;
+    }
+
+    return (-b - std::sqrt(discriminant)) / (2.0 * a);
 }

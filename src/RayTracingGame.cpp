@@ -38,7 +38,7 @@ void RayTracingGame::Render()
 {
     _renderer->RenderBackground();
     _renderer->RenderRaytracing();
-    _renderer->RenderDebug();
+    //_renderer->RenderDebug();
 }
 
 void RayTracingGame::Quit()

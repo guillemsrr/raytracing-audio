@@ -6,6 +6,10 @@
 #include "graphics/Camera.h"
 #include "graphics/Camera.h"
 #include "graphics/Camera.h"
+#include "graphics/Camera.h"
+#include "graphics/Camera.h"
+#include "graphics/Camera.h"
+#include "graphics/Camera.h"
 #include "graphics/RendererBase.h"
 #include "graphics/Shader.h"
 #include "graphics/shapes/CubeRenderer.h"
@@ -46,7 +50,7 @@ private:
     void ShootRays();
 
     void write_color(const color& pixel_color, int index);
-    bool hit_sphere(const point3& center, double radius, const Ray& r);
+    double hit_sphere(const point3& center, double radius, const Ray& r);
 
     const uint8_t bytes_per_pixel = 3; 
 
