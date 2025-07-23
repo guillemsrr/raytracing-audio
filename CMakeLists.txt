@@ -24,9 +24,11 @@ add_executable(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME} PRIVATE SerraEngine)
 target_link_libraries(${PROJECT_NAME} PRIVATE SDL3::SDL3)
 
-# Include engine headers
-target_include_directories(${PROJECT_NAME} PRIVATE
-    ../SerraEngine/include
+# Include headers
+target_include_directories(${PROJECT_NAME}
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/../SerraEngine/include
 )
 
 file(COPY ${CMAKE_SOURCE_DIR}/src/graphics/shaders DESTINATION ${CMAKE_BINARY_DIR})
