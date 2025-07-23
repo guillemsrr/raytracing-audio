@@ -31,4 +31,4 @@ target_include_directories(${PROJECT_NAME}
         ${CMAKE_CURRENT_SOURCE_DIR}/../SerraEngine/include
 )
 
-file(COPY ${CMAKE_SOURCE_DIR}/src/graphics/shaders DESTINATION ${CMAKE_BINARY_DIR})
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/src/graphics/shaders DESTINATION ${CMAKE_BINARY_DIR})
