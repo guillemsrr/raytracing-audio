@@ -19,6 +19,8 @@ void RayTracingGame::Init(SDL_Window* window)
 {
     GameBase::Init(window);
 
+    SDL_GL_SetSwapInterval(0); // Adaptive vsync
+
     _camera->SetPitchAngle(3.f);
     _camera->SetRadius(200);
     _camera->SetMaxRadius(400);

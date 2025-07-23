@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Guillem Serra. All Rights Reserved.
 
 #pragma once
-#include <vector>
-
 #include "graphics/Camera.h"
 #include "graphics/RendererBase.h"
 #include "graphics/Shader.h"
@@ -39,19 +37,24 @@ private:
     Shader _debugShader;
 
     const Scene* _scene = nullptr;
-    int _pixelSize = 1;
     int _bounces = 2;
 
-    std::vector<uint8_t> _raytracingTextureVector;
+    size_t _raytracingTextureBufferSize = 0;
+    uint32_t* _raytracingTextureBuffer = nullptr;
+    glm::vec4* _accumulation = nullptr;
+    uint32_t _frameIndex = 1;
 
     vec3 _lightDir = glm::normalize(glm::vec3(-1.f, -1.f, -1.f));
 
+    std::vector<int> _pixelScreenHorizontalIterator, _pixelScreenVerticalIterator;
+
+    void OnscreenResize();
     void GenerateRGBImage();
     void RayTraceScreen();
-    color RayTracePixelColor(glm::vec3 pixel_pos);
+    void RayTraceScreen2();
+    color RayTracePixelColor(Ray ray);
+    color RayTracePixelColor2(glm::vec2 pixel_pos);
 
-    void write_color(const color& pixel_color, int i, int j, int pixelSize);
-    void write_color(const color& pixel_color, int index);
-
-    const uint8_t bytes_per_pixel = 3;
+    void write_color(const color& pixel_color, int i, int j);
+    void ResetFrameIndex();
 };

@@ -2,9 +2,8 @@
 #include <algorithm>
 #include <vector>
 
-#include "graphics/Camera.h"
-#include "Graphics/GraphicsUtils.h"
 #include "graphics/Shader.h"
+#include "graphics/Camera.h"
 
 #include "raytracing/Interval.h"
 #include "objects/SphereObject.h"
@@ -18,6 +17,7 @@
 #include <SDL3/SDL_log.h>
 
 #include "utils/Utils.h"
+#include <execution>
 
 Renderer::Renderer(SDL_Window* window, Camera* const camera)
     : RendererBase(camera), _window(window)
@@ -52,6 +52,11 @@ Renderer::Renderer(SDL_Window* window, Camera* const camera)
     _raytracingShader.Use();
     GLint _raytracingTextureUniform = glGetUniformLocation(_raytracingShader.GetID(), "uTexture");
     glUniform1i(_raytracingTextureUniform, 0);
+
+    _camera->OnCameraMoved = [this]()
+    {
+        ResetFrameIndex();
+    };
 }
 
 void Renderer::SetScene(Scene& scene)
@@ -74,12 +79,10 @@ void Renderer::RenderRaytracing()
         _screenWidth = screenWidth;
         _screenHeight = screenHeight;
 
-        glBindTexture(GL_TEXTURE_2D, _raytracedTexture);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, screenWidth, screenHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
-
-        _raytracingTextureVector = std::vector<uint8_t>(screenWidth * screenHeight * bytes_per_pixel);
+        OnscreenResize();
     }
 
+    //GenerateRGBImage();
     RayTraceScreen();
 
     // Upload texture
@@ -91,14 +94,43 @@ void Renderer::RenderRaytracing()
                     0,
                     _screenWidth,
                     _screenHeight,
-                    GL_RGB,
+                    GL_RGBA,
                     GL_UNSIGNED_BYTE,
-                    _raytracingTextureVector.data());
+                    _raytracingTextureBuffer);
 
     // Bind and draw
     glBindTextureUnit(0, _raytracedTexture);
     _raytracingShader.Use();
     _screenQuadRenderer.Draw();
+
+    _frameIndex++;
+}
+
+void Renderer::OnscreenResize()
+{
+    glBindTexture(GL_TEXTURE_2D, _raytracedTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, _screenWidth, _screenHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+
+    delete[] _raytracingTextureBuffer;
+    _raytracingTextureBufferSize = _screenWidth * _screenHeight;
+    _raytracingTextureBuffer = new uint32_t[_raytracingTextureBufferSize];
+
+    delete[] _accumulation;
+    _accumulation = new glm::vec4[_raytracingTextureBufferSize];
+
+    _pixelScreenHorizontalIterator.resize(_screenWidth);
+    _pixelScreenVerticalIterator.resize(_screenHeight);
+
+    for (int i = 0; i < _screenWidth; ++i)
+    {
+        _pixelScreenHorizontalIterator[i] = i;
+    }
+
+    for (int i = 0; i < _screenHeight; ++i)
+    {
+        _pixelScreenVerticalIterator[i] = i;
+    }
+    ResetFrameIndex();
 }
 
 void Renderer::RenderDebug()
@@ -136,9 +168,8 @@ void Renderer::GenerateRGBImage()
             float g = float(blockY) / (colorGradientSize - 1);
             float b = 0.0f;
 
-            int index = y * _screenWidth + x;
             color color(r, g, b);
-            write_color(color, index);
+            write_color(color, x, y);
         }
     }
 }
@@ -154,31 +185,69 @@ void Renderer::RayTraceScreen()
     glm::vec3 vertical = viewport_height * _camera->GetUp();
     glm::vec3 lower_left_corner = _camera->GetPosition() + _camera->GetForward() - horizontal * 0.5f - vertical * 0.5f;
 
-    for (int j = 0; j < _screenHeight; j += _pixelSize)
+    if (_frameIndex == 1)
     {
-        float v = static_cast<float>(j) / (_screenHeight - 1);
-        auto vVertical = v * vertical;
-        for (int i = 0; i < _screenWidth; i += _pixelSize)
-        {
-            float u = static_cast<float>(i) / (_screenWidth - 1);
+        memset(_accumulation, 0, sizeof(glm::vec4) * _raytracingTextureBufferSize);
+    }
 
-            glm::vec3 pixel_pos = lower_left_corner + u * horizontal + vVertical;
-            color pixel_color = RayTracePixelColor(pixel_pos);
-            write_color(pixel_color, i, j, _pixelSize);
+    unsigned int numberCores = std::thread::hardware_concurrency();
+
+    std::for_each(std::execution::par,
+                  _pixelScreenVerticalIterator.begin(),
+                  _pixelScreenVerticalIterator.end(),
+                  [&](int j)
+                  {
+                      std::for_each(std::execution::par,
+                                    _pixelScreenHorizontalIterator.begin(),
+                                    _pixelScreenHorizontalIterator.end(),
+                                    [&, j](int i)
+                                    {
+                                        float v = static_cast<float>(j) / (_screenHeight - 1);
+                                        auto vVertical = v * vertical;
+                                        float u = static_cast<float>(i) / (_screenWidth - 1);
+
+                                        glm::vec3 pixel_pos = lower_left_corner + u * horizontal + vVertical;
+                                        //pixel_pos = glm::vec3(i, j, 0.0f);
+                                        glm::vec3 rayPosition = _camera->GetPosition();
+                                        glm::vec3 ray_dir = glm::normalize(pixel_pos - rayPosition);
+                                        Ray ray(rayPosition, ray_dir);
+                                        color pixel_color = RayTracePixelColor(ray);
+
+                                        int index = j * _screenWidth + i;
+                                        _accumulation[index] += glm::vec4(pixel_color, 1.f);
+                                        glm::vec4 accumulatedColor = _accumulation[index] / static_cast<float>(
+                                            _frameIndex);
+
+                                        accumulatedColor =
+                                            glm::clamp(accumulatedColor, glm::vec4(0.0f), glm::vec4(1.f));
+                                        _raytracingTextureBuffer[index] = Utils::ConvertToRGBA(accumulatedColor);
+                                    });
+                  });
+}
+
+void Renderer::RayTraceScreen2()
+{
+    for (int j = 0; j < _screenHeight; ++j)
+    {
+        for (int i = 0; i < _screenWidth; ++i)
+        {
+            glm::vec2 pixel_pos(i, j);
+            color pixel_color = RayTracePixelColor2(pixel_pos);
+            write_color(pixel_color, i, j);
         }
     }
 }
 
-color Renderer::RayTracePixelColor(glm::vec3 pixel_pos)
+color Renderer::RayTracePixelColor(Ray ray)
 {
-    glm::vec3 rayPosition = _camera->GetPosition();
-    glm::vec3 ray_dir = glm::normalize(pixel_pos - rayPosition);
+    auto rayPosition = ray.origin();
+    auto ray_dir = ray.direction();
 
     color pixel_color = color(0.0f);
     float multiplier = 1.f;
     for (int b = 0; b < _bounces; ++b)
     {
-        Ray ray(rayPosition, ray_dir);
+        ray = Ray(rayPosition, ray_dir);
         HitResult hit = _scene->HitAny(ray, Interval(0, FLT_MAX));
         //TODO: cache hit?
         if (hit.HasHit())
@@ -186,9 +255,8 @@ color Renderer::RayTracePixelColor(glm::vec3 pixel_pos)
             float dot = glm::dot(hit.normal, -_lightDir);
             dot = std::max(dot, 0.0f);
             pixel_color += glm::vec3(hit.ObjectHit->GetMaterial()->Albedo) * dot * multiplier;
-
             multiplier *= 0.75f;
-            rayPosition = hit.p + hit.normal * 0.001f;
+            rayPosition = hit.p + hit.normal * 0.01f;
             float reflection = 0.25f;
             vec3 reflectionNormal = hit.normal + hit.ObjectHit->GetMaterial()->Roughness * Utils::RandomInRange(
                 -reflection,
@@ -208,31 +276,24 @@ color Renderer::RayTracePixelColor(glm::vec3 pixel_pos)
     return pixel_color;
 }
 
-void Renderer::write_color(const color& pixel_color, int i, int j, int pixelSize)
+color Renderer::RayTracePixelColor2(glm::vec2 pixel_pos)
 {
-    for (int dy = 0; dy < pixelSize; ++dy)
-    {
-        for (int dx = 0; dx < pixelSize; ++dx)
-        {
-            int x = i + dx;
-            int y = j + dy;
-
-            int index = y * _screenWidth + x;
-            write_color(pixel_color, index);
-        }
-    }
+    glm::vec3 rayPosition = vec3(0.f); //_camera->GetPosition();
+    glm::vec3 ray_dir = glm::normalize(vec3(pixel_pos, -1.f));
+    Ray ray(rayPosition, ray_dir);
+    return RayTracePixelColor(ray);
 }
 
-void Renderer::write_color(const color& pixel_color, int index)
+void Renderer::write_color(const color& pixel_color, int i, int j)
 {
-    index *= bytes_per_pixel;
+    int index = j * _screenWidth + i;
 
-    if (index + 2 >= _raytracingTextureVector.size())
-    {
-        return;
-    }
+    glm::vec4 color = glm::vec4(pixel_color, 1.f);
+    color = glm::clamp(color, glm::vec4(0.0f), glm::vec4(1.f));
+    _raytracingTextureBuffer[index] = Utils::ConvertToRGBA(color);
+}
 
-    _raytracingTextureVector[index + 0] = Utils::FloatToByte255(pixel_color.r);
-    _raytracingTextureVector[index + 1] = Utils::FloatToByte255(pixel_color.g);
-    _raytracingTextureVector[index + 2] = Utils::FloatToByte255(pixel_color.b);
+void Renderer::ResetFrameIndex()
+{
+    _frameIndex = 1;
 }
