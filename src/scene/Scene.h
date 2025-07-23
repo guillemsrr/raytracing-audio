@@ -9,22 +9,15 @@ class Ray;
 class ObjectBase;
 struct HitResult;
 
-class Scene 
+class Scene
 {
 public:
     Scene() = default;
-    
-    std::vector<std::shared_ptr<ObjectBase>> objects;
 
-    void clear()
-    {
-        objects.clear();
-    }
-
-    void add(std::shared_ptr<ObjectBase> object)
-    {
-        objects.push_back(object);
-    }
+    void add(std::shared_ptr<ObjectBase> object);
 
     HitResult HitAny(Ray ray, Interval ray_t) const;
+
+protected:
+    std::vector<std::shared_ptr<ObjectBase>> _objects;
 };

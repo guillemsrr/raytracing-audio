@@ -2,7 +2,7 @@
 
 #pragma once
 #include "ObjectBase.h"
-
+#include <glm/vec3.hpp>
 
 class SphereObject : public ObjectBase
 {

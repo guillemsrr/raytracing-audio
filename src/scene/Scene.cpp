@@ -1,9 +1,14 @@
 ﻿#include "Scene.h"
 
-#include "../raytracing/HitResult.h"
-#include "../raytracing/Interval.h"
-#include "../raytracing//Ray.h"
-#include "../objects/ObjectBase.h"
+#include "raytracing/HitResult.h"
+#include "raytracing/Interval.h"
+#include "raytracing//Ray.h"
+#include "objects/ObjectBase.h"
+
+void Scene::add(std::shared_ptr<ObjectBase> object)
+{
+    _objects.push_back(object);
+}
 
 HitResult Scene::HitAny(Ray ray, Interval ray_t) const
 {
@@ -11,7 +16,7 @@ HitResult Scene::HitAny(Ray ray, Interval ray_t) const
 
     auto closest_so_far = ray_t.max;
 
-    for (const auto& object : objects)
+    for (const auto& object : _objects)
     {
         HitResult hit = object->HitInRayInterval(ray, Interval(ray_t.min, closest_so_far));
         if (hit.HasHit())

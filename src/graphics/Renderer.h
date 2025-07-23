@@ -7,14 +7,9 @@
 #include "graphics/RendererBase.h"
 #include "graphics/Shader.h"
 #include "graphics/shapes/CubeRenderer.h"
-
-#include "../raytracing/Ray.h"
+#include "raytracing/Ray.h"
 #include "renderShapes/ScreenQuadShape.h"
-
-#include "../scene/Scene.h"
-
-#include "graphics/Camera.h"
-#include "graphics/Camera.h"
+#include "scene/Scene.h"
 
 #include <SDL3/SDL_video.h>
 
@@ -44,11 +39,12 @@ private:
     Shader _debugShader;
 
     const Scene* _scene = nullptr;
-    int pixelSize = 5;
+    int _pixelSize = 1;
+    int _bounces = 2;
 
     std::vector<uint8_t> _raytracingTextureVector;
 
-    vec3 lightDir = glm::normalize(glm::vec3(-1.f, -1.f, -1.f));
+    vec3 _lightDir = glm::normalize(glm::vec3(-1.f, -1.f, -1.f));
 
     void GenerateRGBImage();
     void RayTraceScreen();
@@ -56,9 +52,6 @@ private:
 
     void write_color(const color& pixel_color, int i, int j, int pixelSize);
     void write_color(const color& pixel_color, int index);
-    double hit_sphere(const point3& center, double radius, const Ray& r);
 
     const uint8_t bytes_per_pixel = 3;
-
-    color hit_to_color(const Ray& ray, const HitResult& hit);
 };

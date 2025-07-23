@@ -1,8 +1,8 @@
 ﻿#include "SphereObject.h"
 
-#include "../raytracing/Ray.h"
-#include "../raytracing/Interval.h"
-#include "../raytracing/HitResult.h"
+#include "raytracing/Ray.h"
+#include "raytracing/Interval.h"
+#include "raytracing/HitResult.h"
 
 #include <glm/geometric.hpp>
 

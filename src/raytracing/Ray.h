@@ -9,9 +9,7 @@ using point3 = glm::vec3;
 class Ray
 {
 public:
-    Ray(const point3& origin, const vec3& direction) : orig(origin), dir(direction)
-    {
-    }
+    Ray(const point3& origin, const vec3& direction);
 
     const point3& origin() const
     {

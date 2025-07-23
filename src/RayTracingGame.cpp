@@ -1,10 +1,13 @@
 ﻿#include "RayTracingGame.h"
 #include <fstream>
-#include <iostream>
+
+#include "graphics/materials/Material.h"
+#include "graphics/materials/MaterialPresets.h"
 
 #include "input/OrbitalCameraInput.h"
 
 #include "objects/SphereObject.h"
+#include "objects/ObjectBase.h"
 
 #include <SDL3/SDL_log.h>
 
@@ -17,11 +20,20 @@ void RayTracingGame::Init(SDL_Window* window)
     GameBase::Init(window);
 
     _camera->SetPitchAngle(3.f);
+    _camera->SetRadius(200);
+    _camera->SetMaxRadius(400);
+    _camera->SetZoomSensitivity(10.f);
 
     _scene = Scene();
-    _scene.add(std::make_shared<SphereObject>(point3(0, 0, 0), 0.1));
-    //_scene.add(std::make_shared<SphereObject>(point3(0, 0, -0.1), 0.15));
-    _scene.add(std::make_shared<SphereObject>(point3(0, -100.1, 0), 100));
+    auto smallSphere = std::make_shared<SphereObject>(point3(0, 0, 0), 0.5f);
+    std::shared_ptr<Material> metallicMaterial = std::make_shared<Material>(MaterialPresets::Metallic());
+    smallSphere->SetMaterial(metallicMaterial);
+    _scene.add(smallSphere);
+
+    auto concreteMaterial = std::make_shared<Material>(MaterialPresets::Concrete());
+    auto groundSphere = std::make_shared<SphereObject>(point3(0, -100.5f, 0), 100);
+    groundSphere->SetMaterial(concreteMaterial);
+    _scene.add(groundSphere);
 
     _renderer = std::make_unique<Renderer>(_window, _camera);
     _renderer->SetScene(_scene);
