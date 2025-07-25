@@ -4,14 +4,13 @@
 #include <glm/vec3.hpp>
 
 using vec3 = glm::vec3;
-using point3 = glm::vec3;
 
 class Ray
 {
 public:
-    Ray(const point3& origin, const vec3& direction);
+    Ray(const vec3& origin, const vec3& direction);
 
-    const point3& origin() const
+    const vec3& origin() const
     {
         return orig;
     }
@@ -21,12 +20,12 @@ public:
         return dir;
     }
 
-    point3 at(float t) const
+    vec3 at(float t) const
     {
         return orig + t * dir;
     }
 
 private:
-    point3 orig;
+    vec3 orig;
     vec3 dir;
 };

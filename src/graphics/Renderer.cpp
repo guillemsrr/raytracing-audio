@@ -82,7 +82,6 @@ void Renderer::RenderRaytracing()
         OnscreenResize();
     }
 
-    //GenerateRGBImage();
     RayTraceScreen();
 
     // Upload texture
@@ -116,7 +115,7 @@ void Renderer::OnscreenResize()
     _raytracingTextureBuffer = new uint32_t[_raytracingTextureBufferSize];
 
     delete[] _accumulation;
-    _accumulation = new glm::vec4[_raytracingTextureBufferSize];
+    _accumulation = new color[_raytracingTextureBufferSize];
 
     _pixelScreenHorizontalIterator.resize(_screenWidth);
     _pixelScreenVerticalIterator.resize(_screenHeight);
@@ -140,7 +139,7 @@ void Renderer::RenderDebug()
     glm::mat4 view = _camera->GetViewMatrix();
     glm::mat4 proj = _camera->GetProjectionMatrix();
 
-    glm::vec4 debugColor = glm::vec4(0.0f, 0.0f, 0.0f, 0.1f);
+    auto debugColor = color(0.0f, 0.0f, 0.0f, 0.1f);
 
     GLint locMVP = glGetUniformLocation(_debugShader.GetID(), "uMVP");
     GLint locColor = glGetUniformLocation(_debugShader.GetID(), "uColor");
@@ -168,8 +167,8 @@ void Renderer::GenerateRGBImage()
             float g = float(blockY) / (colorGradientSize - 1);
             float b = 0.0f;
 
-            color color(r, g, b);
-            write_color(color, x, y);
+            color color(r, g, b, 1.f);
+            WritePixelColorColor(color, x, y);
         }
     }
 }
@@ -190,7 +189,7 @@ void Renderer::RayTraceScreen()
         memset(_accumulation, 0, sizeof(glm::vec4) * _raytracingTextureBufferSize);
     }
 
-    unsigned int numberCores = std::thread::hardware_concurrency();
+    //unsigned int numberCores = std::thread::hardware_concurrency();
 
     std::for_each(std::execution::par,
                   _pixelScreenVerticalIterator.begin(),
@@ -208,21 +207,27 @@ void Renderer::RayTraceScreen()
 
                                         glm::vec3 pixel_pos = lower_left_corner + u * horizontal + vVertical;
                                         //pixel_pos = glm::vec3(i, j, 0.0f);
-                                        glm::vec3 rayPosition = _camera->GetPosition();
-                                        glm::vec3 ray_dir = glm::normalize(pixel_pos - rayPosition);
-                                        Ray ray(rayPosition, ray_dir);
-                                        color pixel_color = RayTracePixelColor(ray);
 
                                         int index = j * _screenWidth + i;
-                                        _accumulation[index] += glm::vec4(pixel_color, 1.f);
-                                        glm::vec4 accumulatedColor = _accumulation[index] / static_cast<float>(
-                                            _frameIndex);
-
-                                        accumulatedColor =
-                                            glm::clamp(accumulatedColor, glm::vec4(0.0f), glm::vec4(1.f));
-                                        _raytracingTextureBuffer[index] = Utils::ConvertToRGBA(accumulatedColor);
+                                        RayTraceScreenPixel(pixel_pos, index);
                                     });
                   });
+}
+
+void Renderer::RayTraceScreenPixel(glm::vec3 pixelPosition, int index)
+{
+    glm::vec3 rayPosition = _camera->GetPosition();
+    glm::vec3 ray_dir = glm::normalize(pixelPosition - rayPosition);
+    Ray ray(rayPosition, ray_dir);
+    color pixelColor = RayTracePixelColor(ray);
+
+    _accumulation[index] += pixelColor;
+    color accumulatedColor = _accumulation[index] / static_cast<float>(
+        _frameIndex);
+
+    accumulatedColor =
+        glm::clamp(accumulatedColor, color(0.0f), color(1.f));
+    _raytracingTextureBuffer[index] = Utils::ConvertToRGBA(accumulatedColor);
 }
 
 void Renderer::RayTraceScreen2()
@@ -233,7 +238,7 @@ void Renderer::RayTraceScreen2()
         {
             glm::vec2 pixel_pos(i, j);
             color pixel_color = RayTracePixelColor2(pixel_pos);
-            write_color(pixel_color, i, j);
+            WritePixelColorColor(pixel_color, i, j);
         }
     }
 }
@@ -243,7 +248,7 @@ color Renderer::RayTracePixelColor(Ray ray)
     auto rayPosition = ray.origin();
     auto ray_dir = ray.direction();
 
-    color pixel_color = color(0.0f);
+    color pixelColor = color(0.0f);
     float multiplier = 1.f;
     for (int b = 0; b < _bounces; ++b)
     {
@@ -254,9 +259,10 @@ color Renderer::RayTracePixelColor(Ray ray)
         {
             float dot = glm::dot(hit.normal, -_lightDir);
             dot = std::max(dot, 0.0f);
-            pixel_color += glm::vec3(hit.ObjectHit->GetMaterial()->Albedo) * dot * multiplier;
+            pixelColor += glm::vec4(hit.ObjectHit->GetMaterial()->Albedo) * dot * multiplier;
             multiplier *= 0.75f;
-            rayPosition = hit.p + hit.normal * 0.01f;
+            rayPosition = hit.p + hit.normal * HIT_EPSILON;
+            //rayPosition = hit.p + hit.normal * HIT_EPSILON;
             float reflection = 0.25f;
             vec3 reflectionNormal = hit.normal + hit.ObjectHit->GetMaterial()->Roughness * Utils::RandomInRange(
                 -reflection,
@@ -266,31 +272,30 @@ color Renderer::RayTracePixelColor(Ray ray)
         }
 
         float a = 0.5f * (ray.direction().y + 1.f);
-        color backgroundColor(0.1f, 0.2f, 0.3f);
-        color white(1.0, 1.0, 1.0);
+        color backgroundColor(0.1f, 0.2f, 0.3f, 1.f);
+        color white(1.f, 1.f, 1.f, 1.f);
 
-        pixel_color += glm::mix(white, backgroundColor, a);
+        pixelColor += glm::mix(white, backgroundColor, a);
         break;
     }
 
-    return pixel_color;
+    return pixelColor;
 }
 
-color Renderer::RayTracePixelColor2(glm::vec2 pixel_pos)
+color Renderer::RayTracePixelColor2(glm::vec2 pixelPosition)
 {
     glm::vec3 rayPosition = vec3(0.f); //_camera->GetPosition();
-    glm::vec3 ray_dir = glm::normalize(vec3(pixel_pos, -1.f));
-    Ray ray(rayPosition, ray_dir);
+    glm::vec3 rayDirection = glm::normalize(vec3(pixelPosition, -1.f));
+    Ray ray(rayPosition, rayDirection);
     return RayTracePixelColor(ray);
 }
 
-void Renderer::write_color(const color& pixel_color, int i, int j)
+void Renderer::WritePixelColorColor(const color& pixelColor, int i, int j)
 {
     int index = j * _screenWidth + i;
 
-    glm::vec4 color = glm::vec4(pixel_color, 1.f);
-    color = glm::clamp(color, glm::vec4(0.0f), glm::vec4(1.f));
-    _raytracingTextureBuffer[index] = Utils::ConvertToRGBA(color);
+    color clampedColor = glm::clamp(pixelColor, glm::vec4(0.0f), glm::vec4(1.f));
+    _raytracingTextureBuffer[index] = Utils::ConvertToRGBA(clampedColor);
 }
 
 void Renderer::ResetFrameIndex()

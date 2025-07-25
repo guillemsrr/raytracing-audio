@@ -11,7 +11,7 @@
 
 #include <SDL3/SDL_video.h>
 
-using color = glm::vec3;
+using color = glm::vec4;
 
 class Renderer : public RendererBase
 {
@@ -37,7 +37,7 @@ private:
     Shader _debugShader;
 
     const Scene* _scene = nullptr;
-    int _bounces = 2;
+    int _bounces = 10;
 
     size_t _raytracingTextureBufferSize = 0;
     uint32_t* _raytracingTextureBuffer = nullptr;
@@ -46,15 +46,18 @@ private:
 
     vec3 _lightDir = glm::normalize(glm::vec3(-1.f, -1.f, -1.f));
 
+    const float HIT_EPSILON = 0.01f;
+
     std::vector<int> _pixelScreenHorizontalIterator, _pixelScreenVerticalIterator;
 
+    void RayTraceScreenPixel(glm::vec3 pixelPosition, int index);
     void OnscreenResize();
     void GenerateRGBImage();
     void RayTraceScreen();
     void RayTraceScreen2();
     color RayTracePixelColor(Ray ray);
-    color RayTracePixelColor2(glm::vec2 pixel_pos);
+    color RayTracePixelColor2(glm::vec2 pixelPosition);
 
-    void write_color(const color& pixel_color, int i, int j);
+    void WritePixelColorColor(const color& pixelColor, int i, int j);
     void ResetFrameIndex();
 };

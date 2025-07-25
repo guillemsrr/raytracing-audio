@@ -38,9 +38,8 @@ HitResult SphereObject::HitInRayInterval(Ray ray, Interval ray_t)
 
     hitResult.t = root;
     hitResult.p = ray.at(hitResult.t);
-    hitResult.normal = (hitResult.p - center) / radius;
-    glm::vec3 outward_normal = (hitResult.p - center) / radius;
-    hitResult.SetObjectHit(this, ray, outward_normal);
+    hitResult.normal = glm::normalize((hitResult.p - center) / radius);
+    hitResult.SetObjectHit(this, ray);
 
     return hitResult;
 }

@@ -2,7 +2,7 @@
 
 #include <glm/detail/func_geometric.inl>
 
-Ray::Ray(const point3& origin, const vec3& direction) : orig(origin)
+Ray::Ray(const vec3& origin, const vec3& direction) : orig(origin),
+                                                      dir(glm::normalize(direction))
 {
-    dir = glm::normalize(direction);
 }

@@ -20,7 +20,7 @@ struct HitResult
 
     ObjectBase* ObjectHit = nullptr;
 
-    void SetObjectHit(ObjectBase* object, const Ray& r, const glm::vec3& outward_normal);
+    void SetObjectHit(ObjectBase* object, const Ray& r);
     bool HasHit() const;
 
 private:
