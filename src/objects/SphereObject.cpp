@@ -8,13 +8,13 @@
 
 #include "utils/Utils.h"
 
-SphereObject::SphereObject(const glm::vec3& center, double radius) : center(center), radius(std::fmax(0, radius))
+SphereObject::SphereObject(const glm::vec3& center, double radius) : ObjectBase(center), radius(std::fmax(0, radius))
 {
 }
 
 HitResult SphereObject::HitInRayInterval(Ray ray, Interval ray_t)
 {
-    glm::vec3 oc = center - ray.origin();
+    glm::vec3 oc = _center - ray.origin();
     auto a = Utils::LengthSquared(ray.direction());
     auto h = dot(ray.direction(), oc);
     auto c = Utils::LengthSquared(oc) - radius * radius;
@@ -26,7 +26,7 @@ HitResult SphereObject::HitInRayInterval(Ray ray, Interval ray_t)
     auto sqrtd = std::sqrt(discriminant);
 
     // Find the nearest root that lies in the acceptable range.
-    auto root = (h - sqrtd) / a;
+    float root = (h - sqrtd) / a;
     if (!ray_t.surrounds(root))
     {
         root = (h + sqrtd) / a;
@@ -38,7 +38,7 @@ HitResult SphereObject::HitInRayInterval(Ray ray, Interval ray_t)
 
     hitResult.t = root;
     hitResult.p = ray.at(hitResult.t);
-    hitResult.normal = glm::normalize((hitResult.p - center) / radius);
+    hitResult.normal = glm::normalize((hitResult.p - _center) / radius);
     hitResult.SetObjectHit(this, ray);
 
     return hitResult;

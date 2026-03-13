@@ -18,6 +18,8 @@ file(GLOB_RECURSE GAME_SOURCES CONFIGURE_DEPENDS src/*.cpp src/*.h src/*.frag sr
 
 add_executable(${PROJECT_NAME}
     ${GAME_SOURCES}
+        src/RayTracingGame.cpp
+        src/RayTracingGame.h
 )
 
 # Link to the engine target

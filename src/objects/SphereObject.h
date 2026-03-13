@@ -2,15 +2,16 @@
 
 #pragma once
 #include "ObjectBase.h"
-#include <glm/vec3.hpp>
 
 class SphereObject : public ObjectBase
 {
+protected:
+    ~SphereObject() = default;
+
 public:
     SphereObject(const glm::vec3& center, double radius);
     HitResult HitInRayInterval(Ray ray, Interval ray_t) override;
 
 private:
-    glm::vec3 center;
     float radius;
 };
