@@ -13,21 +13,19 @@ struct HitResult;
 
 class ObjectBase
 {
-protected:
-    ~ObjectBase() = default;
-
 public:
+    virtual ~ObjectBase() = default;
     explicit ObjectBase(glm::vec3 center);
 
-    //TODO: find why it can't compile if definition in .cpp
     void SetMaterial(const std::shared_ptr<Material>& material)
     {
         _material = material;
     }
 
     const Material* GetMaterial() const;
+    const glm::vec3& GetCenter() const;
 
-    virtual HitResult HitInRayInterval(Ray ray, Interval ray_t) = 0;
+    virtual HitResult HitInRayInterval(Ray ray, Interval ray_t) const = 0;
 
 protected:
     glm::vec3 _center;

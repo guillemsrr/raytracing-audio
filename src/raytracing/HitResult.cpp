@@ -2,14 +2,15 @@
 
 #include "Ray.h"
 
-void HitResult::SetObjectHit(ObjectBase* object, const Ray& r)
+
+void HitResult::SetObjectHit(const ObjectBase* object, const Ray& r, const glm::vec3& outwardNormal)
 {
-    this->ObjectHit = object;
+    ObjectHit = object;
     _hasHit = true;
 
     direction = r.direction();
-    front_face = dot(direction, -normal) < 0;
-    normal = front_face ? -normal : normal;
+    front_face = dot(direction, outwardNormal) < 0.0f;
+    normal = front_face ? outwardNormal : -outwardNormal;
 }
 
 bool HitResult::HasHit() const

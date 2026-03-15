@@ -13,7 +13,7 @@
 
 #include "objects/BoxObject.h"
 
-RayTracingGame::RayTracingGame(): GameBase(), _renderer(nullptr)
+RayTracingGame::RayTracingGame() : _renderer(nullptr)
 {
 }
 
@@ -37,12 +37,12 @@ void RayTracingGame::Init(SDL_Window* window)
     auto smallSphere = std::make_shared<SphereObject>(vec3(0, 0, 0), 0.5f);
     smallSphere->SetMaterial(metallicMaterial);
     _scene.add(smallSphere);
-    
+
     auto smallSphere2 = std::make_shared<SphereObject>(vec3(1, 0, 0), 0.5f);
     smallSphere->SetMaterial(coloredMetallicMaterial);
     _scene.add(smallSphere2);
 
-    auto box1 = std::make_shared<BoxObject>(vec3(0, 0, 0), vec3(1, 1, 1));
+    auto box1 = std::make_shared<BoxObject>(vec3(2, 0, 0), vec3(1, 1, 1));
     _scene.add(box1);
 
     auto groundSphere = std::make_shared<SphereObject>(vec3(0, -100.5f, 0), 100);

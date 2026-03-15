@@ -5,13 +5,11 @@
 
 class SphereObject : public ObjectBase
 {
-protected:
-    ~SphereObject() = default;
-
 public:
+    ~SphereObject() = default;
     SphereObject(const glm::vec3& center, double radius);
-    HitResult HitInRayInterval(Ray ray, Interval ray_t) override;
+    HitResult HitInRayInterval(Ray ray, Interval ray_t) const override;
 
 private:
-    float radius;
+    float _radius;
 };

@@ -8,20 +8,22 @@
 
 #include "utils/Utils.h"
 
-SphereObject::SphereObject(const glm::vec3& center, double radius) : ObjectBase(center), radius(std::fmax(0, radius))
+SphereObject::SphereObject(const glm::vec3& center, double radius) : ObjectBase(center), _radius(std::fmax(0.0, radius))
 {
 }
 
-HitResult SphereObject::HitInRayInterval(Ray ray, Interval ray_t)
+HitResult SphereObject::HitInRayInterval(Ray ray, Interval ray_t) const
 {
     glm::vec3 oc = _center - ray.origin();
     auto a = Utils::LengthSquared(ray.direction());
     auto h = dot(ray.direction(), oc);
-    auto c = Utils::LengthSquared(oc) - radius * radius;
+    auto c = Utils::LengthSquared(oc) - _radius * _radius;
 
     auto discriminant = h * h - a * c;
     if (discriminant < 0)
+    {
         return {};
+    }
 
     auto sqrtd = std::sqrt(discriminant);
 
@@ -38,8 +40,8 @@ HitResult SphereObject::HitInRayInterval(Ray ray, Interval ray_t)
 
     hitResult.t = root;
     hitResult.p = ray.at(hitResult.t);
-    hitResult.normal = glm::normalize((hitResult.p - _center) / radius);
-    hitResult.SetObjectHit(this, ray);
+    const glm::vec3 outwardNormal = glm::normalize((hitResult.p - _center) / _radius);
+    hitResult.SetObjectHit(this, ray, outwardNormal);
 
     return hitResult;
 }

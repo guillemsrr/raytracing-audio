@@ -18,9 +18,9 @@ struct HitResult
     double t;
     bool front_face;
 
-    ObjectBase* ObjectHit = nullptr;
+    const ObjectBase* ObjectHit = nullptr;
 
-    void SetObjectHit(ObjectBase* object, const Ray& r);
+    void SetObjectHit(const ObjectBase* object, const Ray& r, const glm::vec3& outwardNormal);
     bool HasHit() const;
 
 private:
