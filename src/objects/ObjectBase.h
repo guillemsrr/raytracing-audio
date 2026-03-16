@@ -6,7 +6,7 @@
 #include <glm/vec3.hpp>
 #include <glm/mat3x3.hpp>
 
-class Material;
+struct Material;
 class Ray;
 class Interval;
 struct HitResult;

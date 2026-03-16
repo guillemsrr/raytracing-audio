@@ -12,10 +12,13 @@
 #include <SDL3/SDL_log.h>
 
 #include "objects/BoxObject.h"
+#include "raytracing/IRaytracer.h"
+#include "raytracing/LightRaytracer.h"
 
-RayTracingGame::RayTracingGame() : _renderer(nullptr)
-{
-}
+using vec3 = glm::vec3;
+
+RayTracingGame::RayTracingGame() = default;
+RayTracingGame::~RayTracingGame() = default;
 
 void RayTracingGame::Init(SDL_Window* window)
 {
@@ -36,21 +39,22 @@ void RayTracingGame::Init(SDL_Window* window)
 
     auto smallSphere = std::make_shared<SphereObject>(vec3(0, 0, 0), 0.5f);
     smallSphere->SetMaterial(metallicMaterial);
-    _scene.add(smallSphere);
+    _scene.Add(smallSphere);
 
     auto smallSphere2 = std::make_shared<SphereObject>(vec3(1, 0, 0), 0.5f);
-    smallSphere->SetMaterial(coloredMetallicMaterial);
-    _scene.add(smallSphere2);
+    smallSphere2->SetMaterial(coloredMetallicMaterial);
+    _scene.Add(smallSphere2);
 
     auto box1 = std::make_shared<BoxObject>(vec3(2, 0, 0), vec3(1, 1, 1));
-    _scene.add(box1);
+    _scene.Add(box1);
 
     auto groundSphere = std::make_shared<SphereObject>(vec3(0, -100.5f, 0), 100);
     groundSphere->SetMaterial(concreteMaterial);
-    _scene.add(groundSphere);
+    _scene.Add(groundSphere);
 
     _renderer = std::make_unique<Renderer>(_window, _camera);
-    _renderer->SetScene(_scene);
+    _raytracer = std::make_unique<LightRaytracer>(_camera);
+    _raytracer->SetScene(_scene);
     SetRenderer(_renderer.get());
 
     auto orbitalCameraInput = new OrbitalCameraInput(_camera);
@@ -74,7 +78,7 @@ void RayTracingGame::HandleEvent(const SDL_Event& e)
 void RayTracingGame::Render()
 {
     _renderer->RenderBackground();
-    _renderer->RenderRaytracing();
+    _renderer->UpdateAndRender(_raytracer.get());
     //_renderer->RenderDebug();
 }
 

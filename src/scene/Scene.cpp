@@ -5,7 +5,7 @@
 #include "raytracing//Ray.h"
 #include "objects/ObjectBase.h"
 
-void Scene::add(std::shared_ptr<ObjectBase> object)
+void Scene::Add(std::shared_ptr<ObjectBase> object)
 {
     _objects.push_back(object);
 }
@@ -21,7 +21,7 @@ HitResult Scene::HitAny(Ray ray, Interval ray_t) const
         HitResult hit = object->HitInRayInterval(ray, Interval(ray_t.min, closest_so_far));
         if (hit.HasHit())
         {
-            closest_so_far = temp_rec.t;
+            closest_so_far = hit.t;
             temp_rec = hit;
         }
     }
