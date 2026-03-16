@@ -11,6 +11,7 @@ class Ray;
 class ObjectBase;
 struct HitResult;
 
+
 struct DirectionalLight
 {
     glm::vec3 Direction = glm::normalize(glm::vec3(-0.8f, 1.1f, -0.5f));
@@ -21,7 +22,14 @@ struct DirectionalLight
 class Scene
 {
 public:
+    using vec3 = glm::vec3;
+
     Scene() = default;
+    virtual ~Scene() = default;
+
+    virtual void Update(float deltaTime)
+    {
+    }
 
     void Add(std::shared_ptr<ObjectBase> object);
 

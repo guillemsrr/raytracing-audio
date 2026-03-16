@@ -24,7 +24,8 @@ public:
     void Quit() override;
 
 private:
-    Scene _scene;
+    std::vector<std::unique_ptr<Scene>> _scenes;
+    int _currentSceneIndex = 0;
 
     void RenderUI() override;
 

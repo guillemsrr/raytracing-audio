@@ -22,6 +22,9 @@ public:
         _material = material;
     }
 
+    void SetCenter(const glm::vec3& center) { _center = center; }
+    void SetRotation(const glm::mat3& rotation) { _rotation = rotation; }
+
     const Material* GetMaterial() const;
     const glm::vec3& GetCenter() const;
 
