@@ -11,5 +11,5 @@ public:
     HitResult HitInRayInterval(Ray ray, Interval ray_t) const override;
 
 private:
-    float _radius;
+    double _radius;
 };

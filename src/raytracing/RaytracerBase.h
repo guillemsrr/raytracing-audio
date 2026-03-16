@@ -34,7 +34,7 @@ protected:
 
     void RenderPixel(const glm::vec3& pixelPosition, int index);
 
-    float _shadowBias = 0.001f;
+    float _shadowBias = 0.02f;
 
     Camera* _camera = nullptr;
     const Scene* _scene = nullptr;

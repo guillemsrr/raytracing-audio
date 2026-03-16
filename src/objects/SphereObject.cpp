@@ -14,33 +14,35 @@ SphereObject::SphereObject(const glm::vec3& center, double radius) : ObjectBase(
 
 HitResult SphereObject::HitInRayInterval(Ray ray, Interval ray_t) const
 {
-    glm::vec3 oc = _center - ray.origin();
-    auto a = Utils::LengthSquared(ray.direction());
-    auto h = dot(ray.direction(), oc);
-    auto c = Utils::LengthSquared(oc) - _radius * _radius;
+    glm::dvec3 oc = glm::dvec3(_center) - glm::dvec3(ray.origin());
+    glm::dvec3 rayDirection = glm::dvec3(ray.direction());
+    double a = glm::dot(rayDirection, rayDirection);
+    double h = glm::dot(rayDirection, oc);
+    double c = glm::dot(oc, oc) - _radius * _radius;
 
-    auto discriminant = h * h - a * c;
+    double discriminant = h * h - a * c;
     if (discriminant < 0)
     {
         return {};
     }
 
-    auto sqrtd = std::sqrt(discriminant);
+    double sqrtd = std::sqrt(discriminant);
 
-    // Find the nearest root that lies in the acceptable range.
-    float root = (h - sqrtd) / a;
-    if (!ray_t.surrounds(root))
+    double root = (h - sqrtd) / a;
+    if (root <= ray_t.min || root >= ray_t.max)
     {
         root = (h + sqrtd) / a;
-        if (!ray_t.surrounds(root))
+        if (root <= ray_t.min || root >= ray_t.max)
             return {};
     }
 
     HitResult hitResult = HitResult();
 
     hitResult.t = root;
-    hitResult.p = ray.at(hitResult.t);
-    const glm::vec3 outwardNormal = glm::normalize((hitResult.p - _center) / _radius);
+    glm::dvec3 p_precise = glm::dvec3(ray.origin()) + root * rayDirection;
+    hitResult.p = glm::vec3(p_precise);
+
+    const glm::vec3 outwardNormal = glm::vec3((p_precise - glm::dvec3(_center)) / _radius);
     hitResult.SetObjectHit(this, ray, outwardNormal);
 
     return hitResult;

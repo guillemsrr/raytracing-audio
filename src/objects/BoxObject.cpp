@@ -30,58 +30,59 @@ BoxObject::BoxObject(const glm::vec3& center, const glm::vec3& size, const glm::
 
 HitResult BoxObject::HitInRayInterval(Ray ray, Interval ray_t) const
 {
-    // Transform ray to local box space
-    glm::vec3 localOrigin = _invRotation * (ray.origin() - _center);
-    glm::vec3 localDir = _invRotation * ray.direction();
+    // Transform ray to local box space in double precision
+    glm::dvec3 localOrigin = glm::dmat3(_invRotation) * (glm::dvec3(ray.origin()) - glm::dvec3(_center));
+    glm::dvec3 localDir = glm::dmat3(_invRotation) * glm::dvec3(ray.direction());
 
     // Slab method for AABB in local space
-    glm::vec3 min = -_halfSize;
-    glm::vec3 max = _halfSize;
+    glm::dvec3 min = -_halfSize;
+    glm::dvec3 max = _halfSize;
 
-    float tmin = ray_t.min;
-    float tmax = ray_t.max;
+    double tmin = ray_t.min;
+    double tmax = ray_t.max;
 
     for (int i = 0; i < 3; ++i)
     {
-        if (std::abs(localDir[i]) < 1e-6f)
+        if (std::abs(localDir[i]) < 1e-12)
         {
             if (localOrigin[i] < min[i] || localOrigin[i] > max[i])
                 return {};
         }
         else
         {
-            float invD = 1.0f / localDir[i];
-            float t0 = (min[i] - localOrigin[i]) * invD;
-            float t1 = (max[i] - localOrigin[i]) * invD;
+            double invD = 1.0 / localDir[i];
+            double t0 = (min[i] - localOrigin[i]) * invD;
+            double t1 = (max[i] - localOrigin[i]) * invD;
 
-            if (invD < 0.0f) std::swap(t0, t1);
+            if (invD < 0.0) std::swap(t0, t1);
 
-            tmin = std::max(tmin, t0);
-            tmax = std::min(tmax, t1);
+            tmin = tmin > t0 ? tmin : t0;
+            tmax = tmax < t1 ? tmax : t1;
 
-            if (tmax < tmin)
+            if (tmax <= tmin)
                 return {};
         }
     }
 
-    float t = tmin;
+    double t = tmin;
 
     HitResult hit;
     hit.t = t;
-    glm::vec3 localHitPoint = localOrigin + t * localDir;
-    glm::vec3 localNormal = glm::vec3(0);
+    glm::dvec3 localHitPoint = localOrigin + t * localDir;
+    glm::dvec3 localNormal = glm::dvec3(0);
 
     for (int i = 0; i < 3; ++i)
     {
-        if (std::abs(localHitPoint[i] - max[i]) < 1e-3f)
-            localNormal[i] = 1.0f;
-        else if (std::abs(localHitPoint[i] - min[i]) < 1e-3f)
-            localNormal[i] = -1.0f;
+        if (std::abs(localHitPoint[i] - max[i]) < 1e-6)
+            localNormal[i] = 1.0;
+        else if (std::abs(localHitPoint[i] - min[i]) < 1e-6)
+            localNormal[i] = -1.0;
     }
 
-    // Transform back to world space
-    hit.p = ray.at(t);
-    const glm::vec3 outwardNormal = glm::normalize(_rotation * localNormal);
+    glm::dvec3 p_precise = glm::dvec3(ray.origin()) + t * glm::dvec3(ray.direction());
+    hit.p = glm::vec3(p_precise);
+
+    const glm::vec3 outwardNormal = glm::normalize(glm::vec3(glm::dmat3(_rotation) * localNormal));
     hit.SetObjectHit(this, ray, outwardNormal);
 
     return hit;
