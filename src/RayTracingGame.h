@@ -8,7 +8,8 @@
 #include "graphics/Renderer.h"
 #include "scene/Scene.h"
 
-class LightRaytracer;
+class PathRaytracer;
+class WhittedRaytracer;
 class IRaytracer;
 
 class RayTracingGame final : public SerraEngine::GameBase
@@ -29,4 +30,8 @@ private:
 
     std::unique_ptr<Renderer> _renderer;
     std::unique_ptr<IRaytracer> _raytracer;
+
+    std::unique_ptr<PathRaytracer> _pathRaytracer;
+    std::unique_ptr<WhittedRaytracer> _whittedRaytracer;
+    IRaytracer* _currentRaytracer = nullptr;
 };

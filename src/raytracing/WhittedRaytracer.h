@@ -4,19 +4,19 @@
 
 #include "RaytracerBase.h"
 
-class LightRaytracer : public RaytracerBase
+class WhittedRaytracer : public RaytracerBase
 {
 public:
-    explicit LightRaytracer(Camera* camera);
+    explicit WhittedRaytracer(Camera* camera);
 
 protected:
     color TraceRay(const Ray& ray) const override;
-    bool ShouldAccumulate() const override { return true; }
+    bool ShouldAccumulate() const override { return false; }
 
 private:
     int _maxBounces = 4;
 
-    color ShadeSurface(const HitResult& hit, const Ray& ray) const;
+    color ShadeSurface(const HitResult& hit, const Ray& ray, int depth) const;
     color GetSkyColor(const glm::vec3& rayDirection) const;
     bool IsOccluded(const glm::vec3& origin, const glm::vec3& direction) const;
 };

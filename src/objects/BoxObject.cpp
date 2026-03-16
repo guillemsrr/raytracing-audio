@@ -35,52 +35,55 @@ HitResult BoxObject::HitInRayInterval(Ray ray, Interval ray_t) const
     glm::dvec3 localDir = glm::dmat3(_invRotation) * glm::dvec3(ray.direction());
 
     // Slab method for AABB in local space
-    glm::dvec3 min = -_halfSize;
-    glm::dvec3 max = _halfSize;
+    glm::dvec3 minBounds = -glm::dvec3(_halfSize);
+    glm::dvec3 maxBounds = glm::dvec3(_halfSize);
 
     double tmin = ray_t.min;
     double tmax = ray_t.max;
+    int hit_axis = -1;
+    double hit_sign = 0.0;
 
     for (int i = 0; i < 3; ++i)
     {
         if (std::abs(localDir[i]) < 1e-12)
         {
-            if (localOrigin[i] < min[i] || localOrigin[i] > max[i])
+            if (localOrigin[i] < minBounds[i] || localOrigin[i] > maxBounds[i])
                 return {};
         }
         else
         {
             double invD = 1.0 / localDir[i];
-            double t0 = (min[i] - localOrigin[i]) * invD;
-            double t1 = (max[i] - localOrigin[i]) * invD;
+            double t0 = (minBounds[i] - localOrigin[i]) * invD;
+            double t1 = (maxBounds[i] - localOrigin[i]) * invD;
 
             if (invD < 0.0) std::swap(t0, t1);
 
-            tmin = tmin > t0 ? tmin : t0;
-            tmax = tmax < t1 ? tmax : t1;
+            if (t0 > tmin)
+            {
+                tmin = t0;
+                hit_axis = i;
+                hit_sign = (invD < 0.0) ? 1.0 : -1.0;
+            }
+            if (t1 < tmax) tmax = t1;
 
             if (tmax <= tmin)
                 return {};
         }
     }
 
-    double t = tmin;
-
-    HitResult hit;
-    hit.t = t;
-    glm::dvec3 localHitPoint = localOrigin + t * localDir;
-    glm::dvec3 localNormal = glm::dvec3(0);
-
-    for (int i = 0; i < 3; ++i)
+    // If hit_axis remains -1, either the ray started inside or it didn't hit from outside.
+    if (hit_axis == -1)
     {
-        if (std::abs(localHitPoint[i] - max[i]) < 1e-6)
-            localNormal[i] = 1.0;
-        else if (std::abs(localHitPoint[i] - min[i]) < 1e-6)
-            localNormal[i] = -1.0;
+        return {};
     }
 
-    glm::dvec3 p_precise = glm::dvec3(ray.origin()) + t * glm::dvec3(ray.direction());
+    HitResult hit;
+    hit.t = tmin;
+    glm::dvec3 p_precise = glm::dvec3(ray.origin()) + tmin * glm::dvec3(ray.direction());
     hit.p = glm::vec3(p_precise);
+
+    glm::dvec3 localNormal(0.0);
+    localNormal[hit_axis] = hit_sign;
 
     const glm::vec3 outwardNormal = glm::normalize(glm::vec3(glm::dmat3(_rotation) * localNormal));
     hit.SetObjectHit(this, ray, outwardNormal);

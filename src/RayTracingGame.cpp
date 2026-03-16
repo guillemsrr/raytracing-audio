@@ -13,7 +13,10 @@
 
 #include "objects/BoxObject.h"
 #include "raytracing/IRaytracer.h"
-#include "raytracing/LightRaytracer.h"
+#include "raytracing/PathRaytracer.h"
+#include "raytracing/WhittedRaytracer.h"
+
+#include <imgui.h>
 
 using vec3 = glm::vec3;
 
@@ -53,8 +56,14 @@ void RayTracingGame::Init(SDL_Window* window)
     _scene.Add(groundSphere);
 
     _renderer = std::make_unique<Renderer>(_window, _camera);
-    _raytracer = std::make_unique<LightRaytracer>(_camera);
-    _raytracer->SetScene(_scene);
+    _pathRaytracer = std::make_unique<PathRaytracer>(_camera);
+    _pathRaytracer->SetScene(_scene);
+
+    _whittedRaytracer = std::make_unique<WhittedRaytracer>(_camera);
+    _whittedRaytracer->SetScene(_scene);
+
+    _currentRaytracer = _pathRaytracer.get();
+
     SetRenderer(_renderer.get());
 
     auto orbitalCameraInput = new OrbitalCameraInput(_camera);
@@ -78,7 +87,7 @@ void RayTracingGame::HandleEvent(const SDL_Event& e)
 void RayTracingGame::Render()
 {
     _renderer->RenderBackground();
-    _renderer->UpdateAndRender(_raytracer.get());
+    _renderer->UpdateAndRender(_currentRaytracer);
     //_renderer->RenderDebug();
 }
 
@@ -88,4 +97,22 @@ void RayTracingGame::Quit()
 
 void RayTracingGame::RenderUI()
 {
+    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
+    ImGui::Begin("Raytracing Mode");
+
+    static int mode = 0; // 0 for Path, 1 for Whitted
+    if (ImGui::RadioButton("Stochastic Path Tracer (Accumulation)", &mode, 0))
+    {
+        _currentRaytracer = _pathRaytracer.get();
+        _currentRaytracer->ResetAccumulation();
+    }
+
+    if (ImGui::RadioButton("Whitted Raytracer (Direct + Simple Reflections)", &mode, 1))
+    {
+        _currentRaytracer = _whittedRaytracer.get();
+        _currentRaytracer->ResetAccumulation();
+    }
+
+    ImGui::PopStyleColor();
+    ImGui::End();
 }

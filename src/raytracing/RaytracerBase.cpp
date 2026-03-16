@@ -11,10 +11,10 @@
 
 RaytracerBase::RaytracerBase(Camera* camera) : _camera(camera)
 {
-    _camera->OnCameraMoved = [this]()
+    _camera->AddOnCameraMovedListener([this]()
     {
         ResetAccumulation();
-    };
+    });
 }
 
 void RaytracerBase::SetScene(const Scene& scene)
@@ -82,8 +82,10 @@ void RaytracerBase::Render()
                   {
                       for (const int i : _pixelScreenHorizontalIterator)
                       {
-                          const float u = (static_cast<float>(i) + 0.5f) / static_cast<float>(_width);
-                          const float v = (static_cast<float>(j) + 0.5f) / static_cast<float>(_height);
+                          const float jitterX = ShouldAccumulate() ? Utils::RandomFloat() : 0.5f;
+                          const float jitterY = ShouldAccumulate() ? Utils::RandomFloat() : 0.5f;
+                          const float u = (static_cast<float>(i) + jitterX) / static_cast<float>(_width);
+                          const float v = (static_cast<float>(j) + jitterY) / static_cast<float>(_height);
                           const glm::vec3 pixelPosition = lowerLeftCorner + u * horizontal + v * vertical;
                           const int index = j * _width + i;
                           RenderPixel(pixelPosition, index);
