@@ -3,7 +3,6 @@
 
 #include "input/OrbitalCameraInput.h"
 
-#include "objects/SphereObject.h"
 #include "objects/ObjectBase.h"
 
 #include <SDL3/SDL_log.h>
@@ -41,16 +40,15 @@ void RayTracingGame::Init(SDL_Window* window)
     _scenes.push_back(std::make_unique<MovingObjectsScene>());
     _scenes.push_back(std::make_unique<RotatingScene>());
 
-    _currentSceneIndex = 0;
+    _currentScene = _scenes[0].get();
 
     _renderer = std::make_unique<Renderer>(_window, _camera);
     _pathRaytracer = std::make_unique<PathRaytracer>(_camera);
-    _pathRaytracer->SetScene(*_scenes[_currentSceneIndex]);
-
     _whittedRaytracer = std::make_unique<WhittedRaytracer>(_camera);
-    _whittedRaytracer->SetScene(*_scenes[_currentSceneIndex]);
 
     _currentRaytracer = _pathRaytracer.get();
+
+    ApplySceneToRaytracers();
 
     SetRenderer(_renderer.get());
 
@@ -65,12 +63,7 @@ void RayTracingGame::Update(float deltaTime)
     auto center = glm::vec3();
     _camera->SetTarget(center);
     _camera->UpdatePosition();
-
-    if (_currentSceneIndex > 0)
-    {
-        _scenes[_currentSceneIndex]->Update(deltaTime);
-        _currentRaytracer->ResetAccumulation();
-    }
+    _currentScene->Update(deltaTime);
 }
 
 void RayTracingGame::HandleEvent(const SDL_Event& e)
@@ -87,6 +80,13 @@ void RayTracingGame::Render()
 
 void RayTracingGame::Quit()
 {
+}
+
+void RayTracingGame::ApplySceneToRaytracers()
+{
+    _pathRaytracer->SetScene(*_currentScene);
+    _whittedRaytracer->SetScene(*_currentScene);
+    _audioTracer->SetScene(*_currentScene);
 }
 
 void RayTracingGame::RenderUI()
@@ -110,23 +110,21 @@ void RayTracingGame::RenderUI()
 
     ImGui::Separator();
     ImGui::Text("Scene Selection:");
-    int previousSceneIndex = _currentSceneIndex;
 
-    if (ImGui::RadioButton("Static Scene", &_currentSceneIndex, 0))
+    if (ImGui::RadioButton("Static Scene", _currentScene == _scenes[0].get()))
     {
+        _currentScene = _scenes[0].get();
+        ApplySceneToRaytracers();
     }
-    if (ImGui::RadioButton("Moving Objects Scene", &_currentSceneIndex, 1))
+    if (ImGui::RadioButton("Moving Objects Scene", _currentScene == _scenes[1].get()))
     {
+        _currentScene = _scenes[1].get();
+        ApplySceneToRaytracers();
     }
-    if (ImGui::RadioButton("Rotating Light & Objects Scene", &_currentSceneIndex, 2))
+    if (ImGui::RadioButton("Rotating Light & Objects Scene", _currentScene == _scenes[2].get()))
     {
-    }
-
-    if (previousSceneIndex != _currentSceneIndex)
-    {
-        _pathRaytracer->SetScene(*_scenes[_currentSceneIndex]);
-        _whittedRaytracer->SetScene(*_scenes[_currentSceneIndex]);
-        _currentRaytracer->ResetAccumulation();
+        _currentScene = _scenes[2].get();
+        ApplySceneToRaytracers();
     }
 
     ImGui::PopStyleColor();

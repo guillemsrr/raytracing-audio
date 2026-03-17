@@ -25,9 +25,7 @@ public:
 
 private:
     std::vector<std::unique_ptr<Scene>> _scenes;
-    int _currentSceneIndex = 0;
-
-    void RenderUI() override;
+    Scene* _currentScene;
 
     std::unique_ptr<Renderer> _renderer;
     std::unique_ptr<IRaytracer> _raytracer;
@@ -35,4 +33,6 @@ private:
     std::unique_ptr<PathRaytracer> _pathRaytracer;
     std::unique_ptr<WhittedRaytracer> _whittedRaytracer;
     IRaytracer* _currentRaytracer = nullptr;
+
+    void RenderUI() override;
 };
