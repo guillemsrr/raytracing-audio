@@ -10,6 +10,7 @@
 
 class PathRaytracer;
 class WhittedRaytracer;
+class AudioTracer;
 class IRaytracer;
 
 class RayTracingGame final : public SerraEngine::GameBase
@@ -32,7 +33,10 @@ private:
 
     std::unique_ptr<PathRaytracer> _pathRaytracer;
     std::unique_ptr<WhittedRaytracer> _whittedRaytracer;
+    std::unique_ptr<AudioTracer> _audioTracer;
     IRaytracer* _currentRaytracer = nullptr;
 
     void RenderUI() override;
+    void ApplySceneToRaytracers();
+    bool IsAudioMode() const;
 };

@@ -8,6 +8,7 @@
 #include <SDL3/SDL_log.h>
 
 #include "raytracing/IRaytracer.h"
+#include "raytracing/AudioTracer.h"
 #include "raytracing/PathRaytracer.h"
 #include "raytracing/WhittedRaytracer.h"
 
@@ -45,6 +46,7 @@ void RayTracingGame::Init(SDL_Window* window)
     _renderer = std::make_unique<Renderer>(_window, _camera);
     _pathRaytracer = std::make_unique<PathRaytracer>(_camera);
     _whittedRaytracer = std::make_unique<WhittedRaytracer>(_camera);
+    _audioTracer = std::make_unique<AudioTracer>(_camera);
 
     _currentRaytracer = _pathRaytracer.get();
 
@@ -89,23 +91,28 @@ void RayTracingGame::ApplySceneToRaytracers()
     _audioTracer->SetScene(*_currentScene);
 }
 
+bool RayTracingGame::IsAudioMode() const
+{
+    return _currentRaytracer == _audioTracer.get();
+}
+
+
 void RayTracingGame::RenderUI()
 {
-    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 1.0f));
-    ImGui::Begin("Raytracing Settings");
+    ImGui::Text("Mode: %s", IsAudioMode() ? "Audio" : "Light");
+    ImGui::Separator();
 
-    ImGui::Text("Raytracing Mode:");
-    static int mode = 0; // 0 for Path, 1 for Whitted
-    if (ImGui::RadioButton("Stochastic Path Tracer (Accumulation)", &mode, 0))
+    ImGui::Text("Light Tracer:");
+    if (ImGui::RadioButton("Stochastic Path Tracer (Accumulation)", _currentRaytracer == _pathRaytracer.get()))
     {
         _currentRaytracer = _pathRaytracer.get();
         _currentRaytracer->ResetAccumulation();
     }
 
-    if (ImGui::RadioButton("Whitted Raytracer (Direct + Simple Reflections)", &mode, 1))
+    if (ImGui::RadioButton("Whitted Raytracer (Direct + Simple Reflections)",
+                           _currentRaytracer == _whittedRaytracer.get()))
     {
         _currentRaytracer = _whittedRaytracer.get();
-        _currentRaytracer->ResetAccumulation();
     }
 
     ImGui::Separator();
@@ -126,7 +133,4 @@ void RayTracingGame::RenderUI()
         _currentScene = _scenes[2].get();
         ApplySceneToRaytracers();
     }
-
-    ImGui::PopStyleColor();
-    ImGui::End();
 }
