@@ -32,6 +32,7 @@ public:
     }
 
     void Add(std::shared_ptr<ObjectBase> object);
+    const std::vector<std::shared_ptr<ObjectBase>>& GetObjects() const;
 
     HitResult HitAny(Ray ray, Interval ray_t) const;
 
@@ -39,6 +40,8 @@ public:
     const glm::vec3& GetAmbientLight() const { return _ambientLight; }
     const glm::vec3& GetSkyHorizonColor() const { return _skyHorizonColor; }
     const glm::vec3& GetSkyZenithColor() const { return _skyZenithColor; }
+    virtual glm::vec3 GetAudioSourcePosition() const { return glm::vec3(0.0f, 1.0f, 0.0f); }
+    virtual float GetAudioSourceIntensity() const { return 1.0f; }
 
 protected:
     std::vector<std::shared_ptr<ObjectBase>> _objects;
