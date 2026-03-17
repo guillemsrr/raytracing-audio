@@ -99,9 +99,6 @@ bool RayTracingGame::IsAudioMode() const
 
 void RayTracingGame::RenderUI()
 {
-    ImGui::Text("Mode: %s", IsAudioMode() ? "Audio" : "Light");
-    ImGui::Separator();
-
     ImGui::Text("Light Tracer:");
     if (ImGui::RadioButton("Stochastic Path Tracer (Accumulation)", _currentRaytracer == _pathRaytracer.get()))
     {
@@ -114,6 +111,12 @@ void RayTracingGame::RenderUI()
     {
         _currentRaytracer = _whittedRaytracer.get();
     }
+
+    if (ImGui::RadioButton("Audio Simulation (Complete)", _currentRaytracer == _audioTracer.get()))
+    {
+        _currentRaytracer = _audioTracer.get();
+    }
+
 
     ImGui::Separator();
     ImGui::Text("Scene Selection:");
