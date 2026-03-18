@@ -2,8 +2,6 @@
 
 #include "BoxObject.h"
 
-#include <algorithm>
-
 #include <glm/matrix.hpp>
 #include <glm/trigonometric.hpp>
 
@@ -14,12 +12,12 @@
 #include "raytracing/base/Interval.h"
 #include "../raytracing/base/Ray.h"
 
-BoxObject::BoxObject(const glm::vec3& center, const glm::vec3& size) : ObjectBase(center)
+BoxObject::BoxObject(const vec3& center, const vec3& size) : ObjectBase(center)
 {
     _halfSize = size * 0.5f;
 }
 
-BoxObject::BoxObject(const glm::vec3& center, const glm::vec3& size, const glm::vec3& rotation) : ObjectBase(center)
+BoxObject::BoxObject(const vec3& center, const vec3& size, const vec3& rotation) : ObjectBase(center)
 {
     _halfSize = size * 0.5f;
     Rotation = glm::quat(glm::radians(rotation));
@@ -27,19 +25,19 @@ BoxObject::BoxObject(const glm::vec3& center, const glm::vec3& size, const glm::
 
 HitResult BoxObject::HitInRayInterval(Ray ray, Interval ray_t) const
 {
-    // Transform ray to local box space in double precision
     glm::dmat3 invRot = glm::inverse(glm::mat3_cast(Rotation));
     glm::dvec3 localOrigin = invRot * (glm::dvec3(ray.origin()) - glm::dvec3(Position));
     glm::dvec3 localDir = invRot * glm::dvec3(ray.direction());
 
-    // Slab method for AABB in local space
     glm::dvec3 minBounds = -glm::dvec3(_halfSize);
     glm::dvec3 maxBounds = glm::dvec3(_halfSize);
 
     double tmin = ray_t.min;
     double tmax = ray_t.max;
-    int hit_axis = -1;
-    double hit_sign = 0.0;
+    int enterAxis = -1;
+    double enterSign = 0.0;
+    int exitAxis = -1;
+    double exitSign = 0.0;
 
     for (int i = 0; i < 3; ++i)
     {
@@ -59,29 +57,44 @@ HitResult BoxObject::HitInRayInterval(Ray ray, Interval ray_t) const
             if (t0 > tmin)
             {
                 tmin = t0;
-                hit_axis = i;
-                hit_sign = (invD < 0.0) ? 1.0 : -1.0;
+                enterAxis = i;
+                enterSign = (invD < 0.0) ? 1.0 : -1.0;
             }
-            if (t1 < tmax) tmax = t1;
+            if (t1 < tmax)
+            {
+                tmax = t1;
+                exitAxis = i;
+                exitSign = (invD < 0.0) ? -1.0 : 1.0;
+            }
 
             if (tmax <= tmin)
                 return {};
         }
     }
 
-    // If hit_axis remains -1, either the ray started inside or it didn't hit from outside.
-    if (hit_axis == -1)
+    double hitT = tmin;
+    int hitAxis = enterAxis;
+    double hitSign = enterSign;
+
+    if (hitT <= ray_t.min)
+    {
+        hitT = tmax;
+        hitAxis = exitAxis;
+        hitSign = exitSign;
+    }
+
+    if (hitAxis == -1 || hitT <= ray_t.min || hitT >= ray_t.max)
     {
         return {};
     }
 
     HitResult hit;
-    hit.t = tmin;
-    glm::dvec3 p_precise = glm::dvec3(ray.origin()) + tmin * glm::dvec3(ray.direction());
+    hit.t = hitT;
+    glm::dvec3 p_precise = glm::dvec3(ray.origin()) + hitT * glm::dvec3(ray.direction());
     hit.p = glm::vec3(p_precise);
 
     glm::dvec3 localNormal(0.0);
-    localNormal[hit_axis] = hit_sign;
+    localNormal[hitAxis] = hitSign;
 
     const glm::vec3 outwardNormal = glm::normalize(glm::mat3_cast(Rotation) * glm::vec3(localNormal));
     hit.SetObjectHit(this, ray, outwardNormal);

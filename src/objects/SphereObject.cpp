@@ -6,8 +6,6 @@
 
 #include <glm/geometric.hpp>
 
-#include "utils/Utils.h"
-
 SphereObject::SphereObject(const glm::vec3& center, double radius) : ObjectBase(center), _radius(std::fmax(0.0, radius))
 {
 }

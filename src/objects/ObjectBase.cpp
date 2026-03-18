@@ -2,7 +2,7 @@
 
 #include "graphics/materials/Material.h"
 
-ObjectBase::ObjectBase(glm::vec3 center) : _material(std::make_shared<Material>())
+ObjectBase::ObjectBase(vec3 center) : _material(std::make_shared<Material>())
 {
     Position = center;
 }
