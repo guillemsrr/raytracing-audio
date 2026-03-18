@@ -40,7 +40,7 @@ void RotatingScene::Update(float deltaTime)
 
     if (_objects.size() >= 2)
     {
-        _objects[1]->SetCenter(vec3(std::sin(_time) * 3.f, 0, std::cos(_time) * 3.f));
+        _objects[1]->SetPosition(vec3(std::sin(_time) * 3.f, 0, std::cos(_time) * 3.f));
 
         glm::mat3 rot = glm::mat3(glm::rotate(glm::mat4(1.0f), _time, glm::vec3(0, 1, 0)));
         _objects[0]->SetRotation(rot);

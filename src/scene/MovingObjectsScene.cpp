@@ -34,7 +34,7 @@ void MovingObjectsScene::Update(float deltaTime)
     _time += deltaTime;
     if (_objects.size() >= 2)
     {
-        _objects[0]->SetCenter(vec3(std::sin(_time) * 1.2f, 0, std::cos(_time) * 1.2f));
-        _objects[1]->SetCenter(vec3(std::cos(_time* 2.f) * 2.f, 0, std::sin(_time* 2.f) * 2.f));
+        _objects[0]->SetPosition(vec3(std::sin(_time) * 1.2f, 0, std::cos(_time) * 1.2f));
+        _objects[1]->SetPosition(vec3(std::cos(_time* 2.f) * 2.f, 0, std::sin(_time* 2.f) * 2.f));
     }
 }

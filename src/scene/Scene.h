@@ -27,9 +27,7 @@ public:
     Scene() = default;
     virtual ~Scene() = default;
 
-    virtual void Update(float deltaTime)
-    {
-    }
+    virtual void Update(float deltaTime);
 
     void Add(std::shared_ptr<ObjectBase> object);
     const std::vector<std::shared_ptr<ObjectBase>>& GetObjects() const;

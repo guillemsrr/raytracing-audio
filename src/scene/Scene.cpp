@@ -6,6 +6,10 @@
 #include "objects/ObjectBase.h"
 
 
+void Scene::Update(float deltaTime)
+{
+}
+
 void Scene::Add(std::shared_ptr<ObjectBase> object)
 {
     _objects.push_back(object);
