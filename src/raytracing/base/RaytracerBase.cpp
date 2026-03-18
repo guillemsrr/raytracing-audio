@@ -65,7 +65,7 @@ void RaytracerBase::Render()
     }
 
     const float aspect = _camera->GetAspectRatio();
-    const float fovRad = _camera->GetFOVRad();
+    const float fovRad = _camera->GetFOV();
     const float viewportHeight = 2.0f * std::tan(fovRad * 0.5f);
     const float viewportWidth = viewportHeight * aspect;
 
