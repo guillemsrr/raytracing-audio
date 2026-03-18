@@ -16,5 +16,4 @@ public:
 
 private:
     glm::vec3 _halfSize;
-    glm::mat3 _invRotation;
 };

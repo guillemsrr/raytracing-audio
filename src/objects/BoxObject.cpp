@@ -10,12 +10,11 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/euler_angles.hpp>
 
-#include "raytracing/HitResult.h"
-#include "raytracing/Interval.h"
-#include "raytracing/Ray.h"
+#include "../raytracing/base/HitResult.h"
+#include "raytracing/base/Interval.h"
+#include "../raytracing/base/Ray.h"
 
-BoxObject::BoxObject(const glm::vec3& center, const glm::vec3& size) : ObjectBase(center),
-                                                                       _invRotation(glm::transpose(_rotation))
+BoxObject::BoxObject(const glm::vec3& center, const glm::vec3& size) : ObjectBase(center)
 {
     _halfSize = size * 0.5f;
 }
@@ -23,16 +22,15 @@ BoxObject::BoxObject(const glm::vec3& center, const glm::vec3& size) : ObjectBas
 BoxObject::BoxObject(const glm::vec3& center, const glm::vec3& size, const glm::vec3& rotation) : ObjectBase(center)
 {
     _halfSize = size * 0.5f;
-    _rotation = glm::mat3(glm::yawPitchRoll(glm::radians(rotation.x), glm::radians(rotation.y),
-                                            glm::radians(rotation.z)));
-    _invRotation = glm::transpose(_rotation);
+    Rotation = glm::quat(glm::radians(rotation));
 }
 
 HitResult BoxObject::HitInRayInterval(Ray ray, Interval ray_t) const
 {
     // Transform ray to local box space in double precision
-    glm::dvec3 localOrigin = glm::dmat3(_invRotation) * (glm::dvec3(ray.origin()) - glm::dvec3(_center));
-    glm::dvec3 localDir = glm::dmat3(_invRotation) * glm::dvec3(ray.direction());
+    glm::dmat3 invRot = glm::inverse(glm::mat3_cast(Rotation));
+    glm::dvec3 localOrigin = invRot * (glm::dvec3(ray.origin()) - glm::dvec3(Position));
+    glm::dvec3 localDir = invRot * glm::dvec3(ray.direction());
 
     // Slab method for AABB in local space
     glm::dvec3 minBounds = -glm::dvec3(_halfSize);
@@ -85,7 +83,7 @@ HitResult BoxObject::HitInRayInterval(Ray ray, Interval ray_t) const
     glm::dvec3 localNormal(0.0);
     localNormal[hit_axis] = hit_sign;
 
-    const glm::vec3 outwardNormal = glm::normalize(glm::vec3(glm::dmat3(_rotation) * localNormal));
+    const glm::vec3 outwardNormal = glm::normalize(glm::mat3_cast(Rotation) * glm::vec3(localNormal));
     hit.SetObjectHit(this, ray, outwardNormal);
 
     return hit;

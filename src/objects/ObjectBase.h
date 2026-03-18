@@ -3,15 +3,15 @@
 #pragma once
 #include <future>
 #include <glm/fwd.hpp>
-#include <glm/vec3.hpp>
-#include <glm/mat3x3.hpp>
+
+#include "core/Actor.h"
 
 struct Material;
 class Ray;
 class Interval;
 struct HitResult;
 
-class ObjectBase
+class ObjectBase : public Actor
 {
 public:
     virtual ~ObjectBase() = default;
@@ -22,17 +22,10 @@ public:
         _material = material;
     }
 
-    void SetCenter(const glm::vec3& center) { _center = center; }
-    void SetRotation(const glm::mat3& rotation) { _rotation = rotation; }
-
     const Material* GetMaterial() const;
-    const glm::vec3& GetCenter() const;
 
     virtual HitResult HitInRayInterval(Ray ray, Interval ray_t) const = 0;
 
 protected:
-    glm::vec3 _center;
-    glm::mat3 _rotation;
-
     std::shared_ptr<Material> _material;
 };
