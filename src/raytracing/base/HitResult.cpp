@@ -2,7 +2,6 @@
 
 #include "Ray.h"
 
-
 void HitResult::SetObjectHit(const ObjectBase* object, const Ray& r, const glm::vec3& outwardNormal)
 {
     ObjectHit = object;

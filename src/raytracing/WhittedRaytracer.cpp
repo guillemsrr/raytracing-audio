@@ -8,8 +8,9 @@
 
 #include "graphics/materials/Material.h"
 #include "objects/ObjectBase.h"
-#include "raytracing/HitResult.h"
-#include "raytracing/Interval.h"
+#include "base/HitResult.h"
+#include "base/Ray.h"
+#include "raytracing/base/Interval.h"
 
 WhittedRaytracer::WhittedRaytracer(Camera* camera) : RaytracerBase(camera)
 {

@@ -1,8 +1,8 @@
 ﻿#include "Scene.h"
 
-#include "raytracing/HitResult.h"
-#include "raytracing/Interval.h"
-#include "raytracing//Ray.h"
+#include "../raytracing/base/HitResult.h"
+#include "raytracing/base/Interval.h"
+#include "../raytracing/base/Ray.h"
 #include "objects/ObjectBase.h"
 
 

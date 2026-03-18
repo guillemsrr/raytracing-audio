@@ -1,12 +1,11 @@
 ﻿// Copyright (c) Guillem Serra. All Rights Reserved.
 
 #include "RaytracerBase.h"
-
 #include <algorithm>
 #include <execution>
 #include <cmath>
-#include <cfloat>
 
+#include "Ray.h"
 #include "utils/Utils.h"
 
 RaytracerBase::RaytracerBase(Camera* camera) : _camera(camera)
@@ -55,7 +54,7 @@ void RaytracerBase::Resize(int width, int height)
 
 void RaytracerBase::Render()
 {
-    if (_scene == nullptr || _width <= 0 || _height <= 0)
+    if (!_scene || _width <= 0 || _height <= 0)
     {
         return;
     }

@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "RaytracerBase.h"
+#include "base/RaytracerBase.h"
 
 class WhittedRaytracer : public RaytracerBase
 {
@@ -11,7 +11,6 @@ public:
 
 protected:
     color TraceRay(const Ray& ray) const override;
-    bool ShouldAccumulate() const override { return false; }
 
 private:
     int _maxBounces = 4;

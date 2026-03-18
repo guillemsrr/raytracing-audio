@@ -6,12 +6,11 @@
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 
+#include "graphics/Color.h"
 #include "IRaytracer.h"
 #include "graphics/Camera.h"
-#include "raytracing/Ray.h"
 #include "scene/Scene.h"
 
-using color = glm::vec4;
 
 class RaytracerBase : public IRaytracer
 {

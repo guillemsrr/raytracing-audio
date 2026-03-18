@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "RaytracerBase.h"
+#include "base/RaytracerBase.h"
 
 class PathRaytracer : public RaytracerBase
 {
