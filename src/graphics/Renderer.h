@@ -20,12 +20,11 @@ public:
     Renderer(SDL_Window* window, Camera* const camera);
     ~Renderer() override;
 
+    void RenderBackground() override;
     bool SyncWindowSize();
     void Present(const uint32_t* pixels, int width, int height);
     void UpdateAndRender(IRaytracer* raytracer);
     void RenderDebug();
-
-    void RenderBackground() {}
 
 private:
     ScreenQuadShape _screenQuadRenderer;

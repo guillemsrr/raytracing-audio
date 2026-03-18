@@ -39,6 +39,12 @@ Renderer::~Renderer()
     }
 }
 
+void Renderer::RenderBackground()
+{
+    RendererBase::RenderBackground();
+    glClear(GL_DEPTH_BUFFER_BIT);
+}
+
 bool Renderer::SyncWindowSize()
 {
     int screenWidth = 0;
@@ -63,7 +69,7 @@ bool Renderer::SyncWindowSize()
 
 void Renderer::Present(const uint32_t* pixels, int width, int height)
 {
-    if (pixels == nullptr || width <= 0 || height <= 0)
+    if (!pixels || width <= 0 || height <= 0)
     {
         return;
     }
@@ -80,9 +86,11 @@ void Renderer::Present(const uint32_t* pixels, int width, int height)
                     GL_UNSIGNED_BYTE,
                     pixels);
 
+    glDisable(GL_DEPTH_TEST);
     glBindTextureUnit(0, _raytracedTexture);
     _raytracingShader.Use();
     _screenQuadRenderer.Draw();
+    glEnable(GL_DEPTH_TEST);
 }
 
 void Renderer::UpdateAndRender(IRaytracer* raytracer)
@@ -95,7 +103,7 @@ void Renderer::UpdateAndRender(IRaytracer* raytracer)
     SyncWindowSize();
     raytracer->Resize(_screenWidth, _screenHeight);
     raytracer->Render();
-    
+
     Present(raytracer->GetColorBuffer(), raytracer->GetWidth(), raytracer->GetHeight());
 }
 
