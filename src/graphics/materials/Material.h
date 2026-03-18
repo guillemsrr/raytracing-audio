@@ -3,10 +3,11 @@
 #pragma once
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
+#include "graphics/Color.h"
 
 struct Material
 {
-    glm::vec4 Albedo = glm::vec4(1.0f);
+    color Albedo = Colors::White;
     float Metallic = 0.0f;
     float Roughness = 0.5f;
     

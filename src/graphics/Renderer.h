@@ -3,16 +3,16 @@
 #pragma once
 #include <cstdint>
 #include <glm/vec4.hpp>
+#include "graphics/Color.h"
 #include "graphics/Camera.h"
 #include "graphics/RendererBase.h"
 #include "graphics/Shader.h"
 #include "graphics/shapes/CubeRenderer.h"
 #include "renderShapes/ScreenQuadShape.h"
-#include "raytracing/IRaytracer.h"
+#include "../raytracing/base/IRaytracer.h"
 
 #include <SDL3/SDL_video.h>
 
-using color = glm::vec4;
 
 class Renderer : public RendererBase
 {

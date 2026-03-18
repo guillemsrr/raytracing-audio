@@ -87,7 +87,7 @@ void Renderer::Present(const uint32_t* pixels, int width, int height)
 
 void Renderer::UpdateAndRender(IRaytracer* raytracer)
 {
-    if (raytracer == nullptr)
+    if (!raytracer)
     {
         return;
     }
@@ -95,6 +95,7 @@ void Renderer::UpdateAndRender(IRaytracer* raytracer)
     SyncWindowSize();
     raytracer->Resize(_screenWidth, _screenHeight);
     raytracer->Render();
+    
     Present(raytracer->GetColorBuffer(), raytracer->GetWidth(), raytracer->GetHeight());
 }
 
