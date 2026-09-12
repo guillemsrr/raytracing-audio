@@ -39,7 +39,7 @@ color PathRaytracer::TraceRay(const Ray& ray) const
         // Direct emission
         radiance += throughput * color(glm::vec3(material.Albedo) * material.Emission, 1.0f);
 
-        // Direct lighting from sun (Next Event Estimation)
+        // Direct lighting from sun
         radiance += throughput * ShadeSurface(hit, currentRay);
 
         // Stochastic bounce
