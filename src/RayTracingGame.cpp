@@ -7,8 +7,8 @@
 
 #include <SDL3/SDL_log.h>
 
-#include "raytracing/IRaytracer.h"
-#include "raytracing/AudioTracer.h"
+#include "raytracing/base/IRaytracer.h"
+#include "raytracing/audio/AudioTracer.h"
 #include "raytracing/PathRaytracer.h"
 #include "raytracing/WhittedRaytracer.h"
 
@@ -32,10 +32,9 @@ void RayTracingGame::Init(SDL_Window* window)
 
     SDL_GL_SetSwapInterval(0); // Adaptive vsync
 
-    _camera->SetPitchAngle(3.f);
-    _camera->SetRadius(200);
-    _camera->SetMaxRadius(400);
-    _camera->SetZoomSensitivity(10.f);
+    _camera->SetPitchAngle(15.f);
+    _camera->SetRadius(5.f);
+    _camera->SetMaxRadius(200.f);
 
     _scenes.push_back(std::make_unique<StaticScene>());
     _scenes.push_back(std::make_unique<MovingObjectsScene>());
@@ -46,7 +45,8 @@ void RayTracingGame::Init(SDL_Window* window)
     _renderer = std::make_unique<Renderer>(_window, _camera);
     _pathRaytracer = std::make_unique<PathRaytracer>(_camera);
     _whittedRaytracer = std::make_unique<WhittedRaytracer>(_camera);
-    _audioTracer = std::make_unique<AudioTracer>(_camera);
+    _audioEmitter = std::make_unique<AudioEmitter>();
+    _audioEmitter->Position = vec3(0, 5, 0);
 
     _currentRaytracer = _pathRaytracer.get();
 
@@ -77,6 +77,9 @@ void RayTracingGame::Render()
 {
     _renderer->RenderBackground();
     _renderer->UpdateAndRender(_currentRaytracer);
+
+    _currentRaytracer->ResetAccumulation();
+
     //_renderer->RenderDebug();
 }
 
@@ -88,14 +91,12 @@ void RayTracingGame::ApplySceneToRaytracers()
 {
     _pathRaytracer->SetScene(*_currentScene);
     _whittedRaytracer->SetScene(*_currentScene);
-    _audioTracer->SetScene(*_currentScene);
 }
 
 bool RayTracingGame::IsAudioMode() const
 {
-    return _currentRaytracer == _audioTracer.get();
+    //return _currentRaytracer == _audioTracer.get();
 }
-
 
 void RayTracingGame::RenderUI()
 {
@@ -111,12 +112,6 @@ void RayTracingGame::RenderUI()
     {
         _currentRaytracer = _whittedRaytracer.get();
     }
-
-    if (ImGui::RadioButton("Audio Simulation (Complete)", _currentRaytracer == _audioTracer.get()))
-    {
-        _currentRaytracer = _audioTracer.get();
-    }
-
 
     ImGui::Separator();
     ImGui::Text("Scene Selection:");

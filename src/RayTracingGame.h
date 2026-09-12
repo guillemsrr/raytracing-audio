@@ -8,6 +8,8 @@
 #include "graphics/Renderer.h"
 #include "scene/Scene.h"
 
+#include "audio/AudioEmitter.h"
+
 class PathRaytracer;
 class WhittedRaytracer;
 class AudioTracer;
@@ -33,7 +35,7 @@ private:
 
     std::unique_ptr<PathRaytracer> _pathRaytracer;
     std::unique_ptr<WhittedRaytracer> _whittedRaytracer;
-    std::unique_ptr<AudioTracer> _audioTracer;
+    std::unique_ptr<AudioEmitter> _audioEmitter;
     IRaytracer* _currentRaytracer = nullptr;
 
     void RenderUI() override;
