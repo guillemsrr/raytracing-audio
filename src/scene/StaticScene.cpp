@@ -23,8 +23,8 @@ StaticScene::StaticScene()
     smallSphere2->SetMaterial(coloredMetallicMaterial);
     Add(smallSphere2);
 
-    auto box1 = std::make_shared<BoxObject>(vec3(2, 0, 0), vec3(1, 1, 1));
-    Add(box1);
+    //auto box1 = std::make_shared<BoxObject>(vec3(2, 0, 0), vec3(1, 1, 1));
+    //Add(box1);
 
     auto groundSphere = std::make_shared<SphereObject>(vec3(0, -100.5f, 0), 100);
     groundSphere->SetMaterial(concreteMaterial);
