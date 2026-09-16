@@ -23,9 +23,9 @@ public:
     void Render() override;
     void ResetAccumulation() override;
 
-    [[nodiscard]] int GetWidth() const override;
-    [[nodiscard]] int GetHeight() const override;
-    [[nodiscard]] const uint32_t* GetColorBuffer() const override;
+    int GetWidth() const override;
+    int GetHeight() const override;
+    const uint32_t* GetColorBuffer() const override;
 
 protected:
     virtual color TraceRay(const Ray& ray) const = 0;
@@ -38,8 +38,8 @@ protected:
     void RenderPixel(const glm::vec3& pixelPosition, int index);
 
     Camera* _camera = nullptr;
-    const Scene* _scene = nullptr; // lighting environment: sun, sky, ambient
-    Intersector _intersector; // geometry queries: hits and visibility
+    const Scene* _scene = nullptr;
+    Intersector _intersector;
 
     int _width = 0;
     int _height = 0;

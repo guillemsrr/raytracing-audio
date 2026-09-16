@@ -16,7 +16,7 @@ public:
     virtual void Render() = 0;
     virtual void ResetAccumulation() = 0;
 
-    [[nodiscard]] virtual int GetWidth() const = 0;
-    [[nodiscard]] virtual int GetHeight() const = 0;
-    [[nodiscard]] virtual const uint32_t* GetColorBuffer() const = 0;
+    virtual int GetWidth() const = 0;
+    virtual int GetHeight() const = 0;
+    virtual const uint32_t* GetColorBuffer() const = 0;
 };
