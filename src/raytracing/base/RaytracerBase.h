@@ -8,6 +8,7 @@
 
 #include "graphics/Color.h"
 #include "IRaytracer.h"
+#include "Intersector.h"
 #include "graphics/Camera.h"
 #include "scene/Scene.h"
 
@@ -33,10 +34,9 @@ protected:
 
     void RenderPixel(const glm::vec3& pixelPosition, int index);
 
-    float _shadowBias = 0.02f;
-
     Camera* _camera = nullptr;
-    const Scene* _scene = nullptr;
+    const Scene* _scene = nullptr; // lighting environment: sun, sky, ambient
+    Intersector _intersector;      // geometry queries: hits and visibility
 
     int _width = 0;
     int _height = 0;
@@ -46,7 +46,4 @@ protected:
     std::vector<color> _accumulation;
     std::vector<int> _pixelScreenHorizontalIterator;
     std::vector<int> _pixelScreenVerticalIterator;
-    
-    bool IsOccluded(const glm::vec3& origin, const glm::vec3& direction) const;
-
 };

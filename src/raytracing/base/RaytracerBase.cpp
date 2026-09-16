@@ -5,7 +5,6 @@
 #include <execution>
 #include <cmath>
 #include "HitResult.h"
-#include "Interval.h"
 
 #include "Ray.h"
 #include "utils/Utils.h"
@@ -21,6 +20,7 @@ RaytracerBase::RaytracerBase(Camera* camera) : _camera(camera)
 void RaytracerBase::SetScene(const Scene& scene)
 {
     _scene = &scene;
+    _intersector.SetScene(scene);
     ResetAccumulation();
 }
 
@@ -144,10 +144,4 @@ void RaytracerBase::RenderPixel(const glm::vec3& pixelPosition, int index)
     accumulatedColor.a = 1.0f;
 
     _colorBuffer[index] = Utils::ConvertToRGBA(accumulatedColor);
-}
-
-bool RaytracerBase::IsOccluded(const glm::vec3& origin, const glm::vec3& direction) const
-{
-    const Ray shadowRay(origin, direction);
-    return _scene->HitAny(shadowRay, Interval(_shadowBias, FLT_MAX)).HasHit();
 }
