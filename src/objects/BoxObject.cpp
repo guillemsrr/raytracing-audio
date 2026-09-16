@@ -89,7 +89,7 @@ HitResult BoxObject::HitInRayInterval(Ray ray, Interval ray_t) const
     }
 
     HitResult hit;
-    hit.totalDistance = hitT;
+    hit.distance = hitT;
     glm::dvec3 p_precise = glm::dvec3(ray.origin()) + hitT * glm::dvec3(ray.direction());
     hit.p = glm::vec3(p_precise);
 

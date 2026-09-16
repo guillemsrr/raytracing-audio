@@ -15,7 +15,7 @@ struct HitResult
     glm::vec3 normal;
     glm::vec3 direction;
 
-    double totalDistance;
+    double distance;
     bool front_face;
 
     const ObjectBase* ObjectHit = nullptr;
