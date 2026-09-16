@@ -36,7 +36,7 @@ HitResult SphereObject::HitInRayInterval(Ray ray, Interval ray_t) const
 
     HitResult hitResult = HitResult();
 
-    hitResult.t = root;
+    hitResult.totalDistance = root;
     glm::dvec3 p_precise = glm::dvec3(ray.origin()) + root * rayDirection;
     hitResult.p = glm::vec3(p_precise);
 

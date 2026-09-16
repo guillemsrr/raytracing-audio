@@ -31,7 +31,7 @@ HitResult Scene::HitAny(Ray ray, Interval ray_t) const
         HitResult hit = object->HitInRayInterval(ray, Interval(ray_t.min, closestSoFar));
         if (hit.HasHit())
         {
-            closestSoFar = hit.t;
+            closestSoFar = hit.totalDistance;
             temp_rec = hit;
         }
     }
