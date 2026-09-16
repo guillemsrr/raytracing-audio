@@ -41,9 +41,7 @@ namespace Audio
         {
             const HitResult hit = intersector.ClosestHit(ray, MaxRayDistance);
             if (!hit.HasHit())
-            {
                 break; // escaped the scene: no sky for sound, nothing comes back
-            }
 
             pathLength += hit.distance;
 
@@ -64,9 +62,7 @@ namespace Audio
             throughput *= glm::vec3(1.0f) - material.Absorption;
 
             if (std::max({throughput.x, throughput.y, throughput.z}) < 0.01f)
-            {
                 break;
-            }
 
             const glm::vec3 bounceDirection = glm::normalize(hit.normal + Utils::RandomUnitVector());
             ray = Ray(surfacePoint, bounceDirection);

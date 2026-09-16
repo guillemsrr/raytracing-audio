@@ -2,18 +2,13 @@
 
 #include "Tracer.h"
 
-#include <algorithm>
-
 #include "Listener.h"
 #include "audio/AudioEmitter.h"
 #include "utils/Utils.h"
 
 namespace Audio
 {
-    Tracer::Tracer()
-    {
-        _impulseResponse.assign(_duration / _timeResolution, glm::vec3(0.0f));
-    }
+    Tracer::Tracer() = default;
 
     void Tracer::SetScene(const Scene& scene)
     {
@@ -35,7 +30,7 @@ namespace Audio
         if (!_intersector.HasScene() || !_emitter || !_listener || pathCount <= 0)
             return;
 
-        std::fill(_impulseResponse.begin(), _impulseResponse.end(), glm::vec3(0.0f));
+        _impulseResponse.Clear();
 
         // The direct path does not depend on any random ray, so it is added exactly once.
         _propagator.PropagateDirect(_intersector,
@@ -64,11 +59,6 @@ namespace Audio
 
     void Tracer::RecordArrival(float pathLength, const glm::vec3& energy)
     {
-        const float arrivalTime = pathLength / SpeedOfSound;
-        const auto timeIndex = static_cast<size_t>(arrivalTime / _timeResolution);
-        if (timeIndex < _impulseResponse.size())
-        {
-            _impulseResponse[timeIndex] += energy;
-        }
+        _impulseResponse.AddArrival(pathLength / SpeedOfSound, energy);
     }
 }

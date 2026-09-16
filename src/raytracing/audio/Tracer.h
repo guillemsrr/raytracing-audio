@@ -2,9 +2,7 @@
 
 #pragma once
 
-#include <vector>
-#include <glm/vec3.hpp>
-
+#include "ImpulseResponse.h"
 #include "Propagator.h"
 #include "raytracing/base/Intersector.h"
 
@@ -29,19 +27,9 @@ namespace Audio
          */
         void Trace(int pathCount);
 
-        const std::vector<glm::vec3>& GetImpulseResponse() const
+        const ImpulseResponse& GetImpulseResponse() const
         {
             return _impulseResponse;
-        }
-
-        float GetTimeResolution() const
-        {
-            return _timeResolution;
-        }
-
-        float GetDuration() const
-        {
-            return _duration;
         }
 
     private:
@@ -53,11 +41,7 @@ namespace Audio
         const AudioEmitter* _emitter = nullptr;
         const Listener* _listener = nullptr;
 
-        float _timeResolution = 0.001f; // seconds per entry of the impulse response (1 ms)
-        float _duration = 2.f; // seconds covered by the impulse response
-
-        // Analogue of _colorBuffer: energy per band, indexed by arrival time instead of by pixel.
-        std::vector<glm::vec3> _impulseResponse;
+        ImpulseResponse _impulseResponse;
 
         /** Converts a path length into an arrival time and adds the energy at that time. */
         void RecordArrival(float pathLength, const glm::vec3& energy);
