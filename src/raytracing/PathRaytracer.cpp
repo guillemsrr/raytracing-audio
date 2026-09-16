@@ -84,7 +84,7 @@ color PathRaytracer::ShadeSurface(const HitResult& hit, const Ray& ray) const
     const Material& material = *hit.ObjectHit->GetMaterial();
     const DirectionalLight& sunLight = _scene->GetSunLight();
     const glm::vec3 lightDirection = glm::normalize(sunLight.Direction); // Direction points towards the light source
-    
+
     // Use ambient light only as a small fill light to avoid pitch black in the first frame.
     // In a full path tracer, the sky handles this after the first bounce.
     glm::vec3 lighting = _scene->GetAmbientLight() * glm::vec3(material.Albedo) * material.AO * 0.1f;
@@ -95,13 +95,13 @@ color PathRaytracer::ShadeSurface(const HitResult& hit, const Ray& ray) const
         if (diffuseFactor > 0.0f)
         {
             const glm::vec3 diffuse = glm::vec3(material.Albedo) * sunLight.Color * sunLight.Intensity * diffuseFactor;
-            
+
             const glm::vec3 viewDirection = glm::normalize(-ray.direction());
             const glm::vec3 reflectedLight = glm::reflect(-lightDirection, hit.normal);
             const float shininess = glm::mix(12.0f, 96.0f, 1.0f - glm::clamp(material.Roughness, 0.0f, 1.0f));
             const float specularFactor = std::pow(std::max(glm::dot(viewDirection, reflectedLight), 0.0f), shininess);
             const glm::vec3 specular = sunLight.Color * sunLight.Intensity * specularFactor * material.Specular;
-            
+
             lighting += diffuse + specular;
         }
     }
@@ -115,10 +115,4 @@ color PathRaytracer::GetSkyColor(const glm::vec3& rayDirection) const
     const color horizon(_scene->GetSkyHorizonColor(), 1.0f);
     const color zenith(_scene->GetSkyZenithColor(), 1.0f);
     return glm::mix(horizon, zenith, blend);
-}
-
-bool PathRaytracer::IsOccluded(const glm::vec3& origin, const glm::vec3& direction) const
-{
-    const Ray shadowRay(origin, direction);
-    return _scene->HitAny(shadowRay, Interval(_shadowBias, FLT_MAX)).HasHit();
 }

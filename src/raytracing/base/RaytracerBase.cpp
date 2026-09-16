@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <execution>
 #include <cmath>
+#include "HitResult.h"
+#include "Interval.h"
 
 #include "Ray.h"
 #include "utils/Utils.h"
@@ -71,8 +73,8 @@ void RaytracerBase::Render()
 
     const glm::vec3 horizontal = viewportWidth * _camera->GetRight();
     const glm::vec3 vertical = viewportHeight * _camera->GetUp();
-    const glm::vec3 lowerLeftCorner = _camera->GetPosition() + _camera->GetForward()
-        - horizontal * 0.5f - vertical * 0.5f;
+    const glm::vec3 lowerLeftCorner = _camera->GetPosition() + _camera->GetForward() - horizontal * 0.5f - vertical *
+                                      0.5f;
 
     std::for_each(std::execution::par,
                   _pixelScreenVerticalIterator.begin(),
@@ -142,4 +144,10 @@ void RaytracerBase::RenderPixel(const glm::vec3& pixelPosition, int index)
     accumulatedColor.a = 1.0f;
 
     _colorBuffer[index] = Utils::ConvertToRGBA(accumulatedColor);
+}
+
+bool RaytracerBase::IsOccluded(const glm::vec3& origin, const glm::vec3& direction) const
+{
+    const Ray shadowRay(origin, direction);
+    return _scene->HitAny(shadowRay, Interval(_shadowBias, FLT_MAX)).HasHit();
 }

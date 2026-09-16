@@ -46,4 +46,7 @@ protected:
     std::vector<color> _accumulation;
     std::vector<int> _pixelScreenHorizontalIterator;
     std::vector<int> _pixelScreenVerticalIterator;
+    
+    bool IsOccluded(const glm::vec3& origin, const glm::vec3& direction) const;
+
 };

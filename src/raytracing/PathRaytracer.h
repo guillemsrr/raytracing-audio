@@ -18,5 +18,4 @@ private:
 
     color ShadeSurface(const HitResult& hit, const Ray& ray) const;
     color GetSkyColor(const glm::vec3& rayDirection) const;
-    bool IsOccluded(const glm::vec3& origin, const glm::vec3& direction) const;
 };
