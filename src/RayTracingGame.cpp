@@ -1,4 +1,7 @@
-﻿#include "RayTracingGame.h"
+﻿// Copyright (c) Guillem Serra. All Rights Reserved.
+
+#include "RayTracingGame.h"
+#include <algorithm>
 #include <fstream>
 
 #include "input/OrbitalCameraInput.h"
@@ -8,9 +11,10 @@
 #include <SDL3/SDL_log.h>
 
 #include "raytracing/base/IRaytracer.h"
-#include "raytracing/audio/AudioTracer.h"
-#include "raytracing/PathRaytracer.h"
-#include "raytracing/WhittedRaytracer.h"
+#include "raytracing/audio/Tracer.h"
+#include "raytracing/audio/Visualizer.h"
+#include "raytracing/light/PathTracer.h"
+#include "raytracing/light/WhittedTracer.h"
 
 #include <imgui.h>
 #include <glm/gtc/matrix_transform.hpp>
@@ -21,7 +25,6 @@
 #include "scene/StaticScene.h"
 
 using vec3 = glm::vec3;
-
 
 RayTracingGame::RayTracingGame() = default;
 RayTracingGame::~RayTracingGame() = default;
@@ -43,18 +46,24 @@ void RayTracingGame::Init(SDL_Window* window)
     _currentScene = _scenes[0].get();
 
     _renderer = std::make_unique<Renderer>(_window, _camera);
-    _pathRaytracer = std::make_unique<PathRaytracer>(_camera);
-    _whittedRaytracer = std::make_unique<WhittedRaytracer>(_camera);
+    _lightPathTracer = std::make_unique<Light::PathTracer>(_camera);
+    _lightWhittedTracer = std::make_unique<Light::WhittedTracer>(_camera);
     _audioEmitter = std::make_unique<AudioEmitter>();
     _audioEmitter->Position = vec3(0, 5, 0);
+    _audioListener = std::make_unique<Audio::Listener>();
+    _audioTracer = std::make_unique<Audio::Tracer>();
+    _audioTracer->SetEmitter(_audioEmitter.get());
+    _audioTracer->SetListener(_audioListener.get());
+    _audioVisualizer = std::make_unique<Audio::Visualizer>(_camera);
+    _audioVisualizer->SetEmitter(_audioEmitter.get());
 
-    _currentRaytracer = _pathRaytracer.get();
+    _currentRaytracer = _lightPathTracer.get();
 
     ApplySceneToRaytracers();
 
     SetRenderer(_renderer.get());
 
-    auto orbitalCameraInput = new OrbitalCameraInput(_camera);
+    const auto orbitalCameraInput = new OrbitalCameraInput(_camera);
     AddInputHandler(orbitalCameraInput);
 }
 
@@ -62,7 +71,7 @@ void RayTracingGame::Update(float deltaTime)
 {
     //SDL_Log("Camera pitch angle %f", _camera->GetPitchAngle());
 
-    auto center = glm::vec3();
+    const auto center = glm::vec3();
     _camera->SetTarget(center);
     _camera->UpdatePosition();
     _currentScene->Update(deltaTime);
@@ -78,8 +87,7 @@ void RayTracingGame::Render()
     _renderer->RenderBackground();
     _renderer->UpdateAndRender(_currentRaytracer);
 
-    _currentRaytracer->ResetAccumulation();
-
+    //_currentRaytracer->ResetAccumulation();
     //_renderer->RenderDebug();
 }
 
@@ -87,48 +95,66 @@ void RayTracingGame::Quit()
 {
 }
 
-void RayTracingGame::ApplySceneToRaytracers()
-{
-    _pathRaytracer->SetScene(*_currentScene);
-    _whittedRaytracer->SetScene(*_currentScene);
-}
-
-bool RayTracingGame::IsAudioMode() const
-{
-    //return _currentRaytracer == _audioTracer.get();
-}
-
 void RayTracingGame::RenderUI()
 {
     ImGui::Text("Light Tracer:");
-    if (ImGui::RadioButton("Stochastic Path Tracer (Accumulation)", _currentRaytracer == _pathRaytracer.get()))
-    {
-        _currentRaytracer = _pathRaytracer.get();
-        _currentRaytracer->ResetAccumulation();
-    }
-
-    if (ImGui::RadioButton("Whitted Raytracer (Direct + Simple Reflections)",
-                           _currentRaytracer == _whittedRaytracer.get()))
-    {
-        _currentRaytracer = _whittedRaytracer.get();
-    }
+    RaytracerRadioButton("Stochastic Path Tracer (Accumulation)", _lightPathTracer.get());
+    RaytracerRadioButton("Whitted Raytracer (Direct + Simple Reflections)", _lightWhittedTracer.get());
+    RaytracerRadioButton("Sound Visualizer (Acoustic Energy per Band)", _audioVisualizer.get());
 
     ImGui::Separator();
     ImGui::Text("Scene Selection:");
+    SceneRadioButton("Static Scene", _scenes[0].get());
+    SceneRadioButton("Moving Objects Scene", _scenes[1].get());
+    SceneRadioButton("Rotating Light & Objects Scene", _scenes[2].get());
 
-    if (ImGui::RadioButton("Static Scene", _currentScene == _scenes[0].get()))
+    ImGui::Separator();
+    RenderAudioUI();
+}
+
+void RayTracingGame::RaytracerRadioButton(const char* label, IRaytracer* raytracer)
+{
+    if (ImGui::RadioButton(label, _currentRaytracer == raytracer))
     {
-        _currentScene = _scenes[0].get();
-        ApplySceneToRaytracers();
+        SetCurrentRaytracer(raytracer);
     }
-    if (ImGui::RadioButton("Moving Objects Scene", _currentScene == _scenes[1].get()))
+}
+
+void RayTracingGame::SceneRadioButton(const char* label, Scene* scene)
+{
+    if (ImGui::RadioButton(label, _currentScene == scene))
     {
-        _currentScene = _scenes[1].get();
-        ApplySceneToRaytracers();
+        SetCurrentScene(scene);
     }
-    if (ImGui::RadioButton("Rotating Light & Objects Scene", _currentScene == _scenes[2].get()))
+}
+
+void RayTracingGame::SetCurrentRaytracer(IRaytracer* raytracer)
+{
+    _currentRaytracer = raytracer;
+    _currentRaytracer->ResetAccumulation();
+}
+
+void RayTracingGame::SetCurrentScene(Scene* scene)
+{
+    _currentScene = scene;
+    ApplySceneToRaytracers();
+}
+
+void RayTracingGame::ApplySceneToRaytracers()
+{
+    _lightPathTracer->SetScene(*_currentScene);
+    _lightWhittedTracer->SetScene(*_currentScene);
+    _audioTracer->SetScene(*_currentScene);
+    _audioVisualizer->SetScene(*_currentScene);
+}
+
+void RayTracingGame::RenderAudioUI()
+{
+    ImGui::Text("Sound:");
+    ImGui::SliderInt("Paths", &_audioPathCount, 100, 20000);
+    if (ImGui::Button("Trace impulse response"))
     {
-        _currentScene = _scenes[2].get();
-        ApplySceneToRaytracers();
+        _audioListener->Position = _camera->GetPosition();
+        _audioTracer->Trace(_audioPathCount);
     }
 }

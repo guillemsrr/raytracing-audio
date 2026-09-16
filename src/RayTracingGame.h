@@ -9,11 +9,21 @@
 #include "scene/Scene.h"
 
 #include "audio/AudioEmitter.h"
+#include "raytracing/audio/Listener.h"
 
-class PathRaytracer;
-class WhittedRaytracer;
-class AudioTracer;
 class IRaytracer;
+
+namespace Light
+{
+    class PathTracer;
+    class WhittedTracer;
+}
+
+namespace Audio
+{
+    class Tracer;
+    class Visualizer;
+}
 
 class RayTracingGame final : public SerraEngine::GameBase
 {
@@ -33,12 +43,21 @@ private:
     std::unique_ptr<Renderer> _renderer;
     std::unique_ptr<IRaytracer> _raytracer;
 
-    std::unique_ptr<PathRaytracer> _pathRaytracer;
-    std::unique_ptr<WhittedRaytracer> _whittedRaytracer;
+    std::unique_ptr<Light::PathTracer> _lightPathTracer;
+    std::unique_ptr<Light::WhittedTracer> _lightWhittedTracer;
+    std::unique_ptr<Audio::Visualizer> _audioVisualizer;
     std::unique_ptr<AudioEmitter> _audioEmitter;
+    std::unique_ptr<Audio::Listener> _audioListener;
+    std::unique_ptr<Audio::Tracer> _audioTracer;
     IRaytracer* _currentRaytracer = nullptr;
 
+    int _audioPathCount = 2000;
+
     void RenderUI() override;
+    void RaytracerRadioButton(const char* label, IRaytracer* raytracer);
+    void SceneRadioButton(const char* label, Scene* scene);
+    void SetCurrentRaytracer(IRaytracer* raytracer);
+    void SetCurrentScene(Scene* scene);
     void ApplySceneToRaytracers();
-    bool IsAudioMode() const;
+    void RenderAudioUI();
 };
