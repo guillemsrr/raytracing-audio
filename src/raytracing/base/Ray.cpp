@@ -1,8 +1,9 @@
-﻿#include "Ray.h"
+﻿// Copyright (c) Guillem Serra. All Rights Reserved.
+
+#include "Ray.h"
 
 #include <glm/detail/func_geometric.inl>
 
-Ray::Ray(const vec3& origin, const vec3& direction) : orig(origin),
-                                                      dir(glm::normalize(direction))
+Ray::Ray(const vec3& origin, const vec3& direction) : orig(origin), dir(glm::normalize(direction))
 {
 }

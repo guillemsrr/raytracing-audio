@@ -6,14 +6,18 @@
 
 namespace Light
 {
-    class PathTracer : public RaytracerBase
+    class PathTracer final : public RaytracerBase
     {
     public:
         explicit PathTracer(Camera* camera);
 
     protected:
         color TraceRay(const Ray& ray) const override;
-        bool ShouldAccumulate() const override { return true; }
+
+        bool ShouldAccumulate() const override
+        {
+            return true;
+        }
 
     private:
         int _maxBounces = 4;

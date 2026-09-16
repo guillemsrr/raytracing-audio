@@ -11,7 +11,7 @@
 
 RaytracerBase::RaytracerBase(Camera* camera) : _camera(camera)
 {
-    _camera->AddOnCameraMovedListener([this]()
+    _camera->AddOnCameraMovedListener([this]
     {
         ResetAccumulation();
     });
@@ -27,9 +27,7 @@ void RaytracerBase::SetScene(const Scene& scene)
 void RaytracerBase::Resize(int width, int height)
 {
     if (width <= 0 || height <= 0 || (width == _width && height == _height))
-    {
         return;
-    }
 
     _width = width;
     _height = height;
@@ -42,14 +40,10 @@ void RaytracerBase::Resize(int width, int height)
     _pixelScreenVerticalIterator.resize(_height);
 
     for (int i = 0; i < _width; ++i)
-    {
         _pixelScreenHorizontalIterator[i] = i;
-    }
 
     for (int i = 0; i < _height; ++i)
-    {
         _pixelScreenVerticalIterator[i] = i;
-    }
 
     ResetAccumulation();
 }
@@ -57,14 +51,10 @@ void RaytracerBase::Resize(int width, int height)
 void RaytracerBase::Render()
 {
     if (!_scene || _width <= 0 || _height <= 0)
-    {
         return;
-    }
 
     if (_frameIndex == 1 || !ShouldAccumulate())
-    {
         std::memset(_accumulation.data(), 0, sizeof(color) * _accumulation.size());
-    }
 
     const float aspect = _camera->GetAspectRatio();
     const float fovRad = _camera->GetFOV();
@@ -94,9 +84,7 @@ void RaytracerBase::Render()
                   });
 
     if (ShouldAccumulate())
-    {
         _frameIndex++;
-    }
 }
 
 void RaytracerBase::ResetAccumulation()
@@ -126,13 +114,9 @@ void RaytracerBase::RenderPixel(const glm::vec3& pixelPosition, int index)
     const color pixelColor = TraceRay(Ray(rayOrigin, rayDirection));
 
     if (!ShouldAccumulate())
-    {
         _accumulation[index] = pixelColor;
-    }
     else
-    {
         _accumulation[index] += pixelColor;
-    }
 
     color accumulatedColor = !ShouldAccumulate()
                                  ? _accumulation[index]

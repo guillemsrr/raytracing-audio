@@ -24,9 +24,7 @@ bool Intersector::HasScene() const
 HitResult Intersector::ClosestHit(const Ray& ray, const float maxDistance) const
 {
     if (!_scene)
-    {
         return HitResult();
-    }
 
     return _scene->HitAny(ray, Interval(_bias, maxDistance));
 }

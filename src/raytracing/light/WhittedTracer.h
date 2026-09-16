@@ -6,7 +6,7 @@
 
 namespace Light
 {
-    class WhittedTracer : public RaytracerBase
+    class WhittedTracer final : public RaytracerBase
     {
     public:
         explicit WhittedTracer(Camera* camera);

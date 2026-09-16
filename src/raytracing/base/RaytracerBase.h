@@ -12,7 +12,6 @@
 #include "graphics/Camera.h"
 #include "scene/Scene.h"
 
-
 class RaytracerBase : public IRaytracer
 {
 public:
@@ -30,13 +29,17 @@ public:
 
 protected:
     virtual color TraceRay(const Ray& ray) const = 0;
-    virtual bool ShouldAccumulate() const { return false; }
+
+    virtual bool ShouldAccumulate() const
+    {
+        return false;
+    }
 
     void RenderPixel(const glm::vec3& pixelPosition, int index);
 
     Camera* _camera = nullptr;
     const Scene* _scene = nullptr; // lighting environment: sun, sky, ambient
-    Intersector _intersector;      // geometry queries: hits and visibility
+    Intersector _intersector; // geometry queries: hits and visibility
 
     int _width = 0;
     int _height = 0;

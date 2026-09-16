@@ -1,4 +1,6 @@
-﻿#include "HitResult.h"
+﻿// Copyright (c) Guillem Serra. All Rights Reserved.
+
+#include "HitResult.h"
 
 #include "Ray.h"
 

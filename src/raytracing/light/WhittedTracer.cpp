@@ -20,9 +20,7 @@ namespace Light
     {
         const HitResult hit = _intersector.ClosestHit(ray);
         if (!hit.HasHit())
-        {
             return GetSkyColor(ray.direction());
-        }
 
         return ShadeSurface(hit, ray, 0);
     }
@@ -42,12 +40,14 @@ namespace Light
             const float diffuseFactor = std::max(glm::dot(hit.normal, lightDirection), 0.0f);
             if (diffuseFactor > 0.0f)
             {
-                const glm::vec3 diffuse = glm::vec3(material.Albedo) * sunLight.Color * sunLight.Intensity * diffuseFactor;
+                const glm::vec3 diffuse = glm::vec3(material.Albedo) * sunLight.Color * sunLight.Intensity *
+                                          diffuseFactor;
 
                 const glm::vec3 viewDirection = glm::normalize(-ray.direction());
                 const glm::vec3 reflectedLight = glm::reflect(-lightDirection, hit.normal);
                 const float shininess = glm::mix(12.0f, 96.0f, 1.0f - glm::clamp(material.Roughness, 0.0f, 1.0f));
-                const float specularFactor = std::pow(std::max(glm::dot(viewDirection, reflectedLight), 0.0f), shininess);
+                const float specularFactor = std::pow(std::max(glm::dot(viewDirection, reflectedLight), 0.0f),
+                                                      shininess);
                 const glm::vec3 specular = sunLight.Color * sunLight.Intensity * specularFactor * material.Specular;
 
                 lighting += diffuse + specular;

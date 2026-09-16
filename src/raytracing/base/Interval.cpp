@@ -1,7 +1,9 @@
-﻿#include "Interval.h"
+﻿// Copyright (c) Guillem Serra. All Rights Reserved.
+
+#include "Interval.h"
 #include <cfloat>
 
-Interval::Interval(): min(FLT_MAX), max(-FLT_MAX)
+Interval::Interval() : min(FLT_MAX), max(-FLT_MAX)
 {
 }
 
